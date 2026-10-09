@@ -1,6 +1,6 @@
 > This project is based on GLM-5.3-Flash-NVFP4-MXFP8-CSF-QAD by Local Inference Lab, Inc., a non-profit organization, available at https://huggingface.co/local-inference-lab/GLM-5.3-Flash-NVFP4-MXFP8-CSF-QAD. GLM-5.3-Flash-NVFP4-MXFP8-CSF-QAD is licensed under the Local Inference Lab License, Version 1.0.
 
-# glm53-kraken-tp3-zen
+# glm53-kraken-tp3-dcp3-zen
 
 A tested recipe for serving **GLM-5.3-Flash** with a **1M-token context** on **three RTX PRO 6000 Blackwell 96 GB**
 GPUs, through an OpenAI-compatible API. It runs at **~230 tok/s for a single user** and **~1,480 tok/s aggregate at 32
@@ -47,7 +47,7 @@ whose other GPUs were serving other models at the same time, sharing the PCIe fa
 
 ```bash
 git clone https://github.com/shihanqu/RTX-Pro-6000-Recipes
-cd RTX-Pro-6000-Recipes/glm53-kraken-tp3-zen
+cd RTX-Pro-6000-Recipes/glm53-kraken-tp3-dcp3-zen
 
 cp .env.example .env
 $EDITOR .env                   # GPU_IDS, HOST_PORT, CPUSET, HF_CACHE_DIR, RUNTIME_CACHE_DIR
@@ -78,7 +78,7 @@ The model thinks first (reasoning effort `max` by default). The reasoning comes 
 answer in `content`. Allow enough `max_tokens` for both.
 
 Other launcher commands: `./launch.sh check` (pre-start checks only), `./launch.sh config` (resolved compose file),
-`./launch.sh logs`, `./launch.sh stop`. To stop and remove the container: `docker compose -p glm53-kraken-tp3-zen down`.
+`./launch.sh logs`, `./launch.sh stop`. To stop and remove the container: `docker compose -p glm53-kraken-tp3-dcp3-zen down`.
 
 ### Files
 

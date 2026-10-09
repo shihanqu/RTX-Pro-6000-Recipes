@@ -1,7 +1,7 @@
 # Shared helpers for launch.sh, download_checkpoint.sh and validate.sh (sourced, not executed).
 
-PROJECT=glm53-kraken-tp3-zen
-CONTAINER=glm53-kraken-tp3-zen
+PROJECT=glm53-kraken-tp3-dcp3-zen
+CONTAINER=glm53-kraken-tp3-dcp3-zen
 IMAGE=azallaza/glm53-kraken-tp3@sha256:44c2d27ec0269e4620895a3ce21f639ee93f9e4d9b935e896ed52a3a6900c486
 
 die() {

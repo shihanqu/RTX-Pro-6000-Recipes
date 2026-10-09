@@ -5,13 +5,13 @@
 #
 # The serve script is the one baked into the image (/usr/local/bin/serve-glm53-flash-tp3-kraken.py,
 # sha256 ea27f13a...). It turns the environment below into the vLLM command line.
-name: glm53-kraken-tp3-zen
+name: glm53-kraken-tp3-dcp3-zen
 
 services:
-  glm53-kraken-tp3-zen:
+  glm53-kraken-tp3-dcp3-zen:
     # azallaza/glm53-kraken-tp3:20261008, pinned by digest.
     image: azallaza/glm53-kraken-tp3@sha256:44c2d27ec0269e4620895a3ce21f639ee93f9e4d9b935e896ed52a3a6900c486
-    container_name: glm53-kraken-tp3-zen
+    container_name: glm53-kraken-tp3-dcp3-zen
     restart: "no"
     init: true
     ipc: host
