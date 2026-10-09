@@ -1,0 +1,14 @@
+# Local settings (every recipe keeps its own .env next to its compose.yaml)
+.env
+
+# Benchmark output and logs
+results/
+logs/
+*.log
+
+# llm-inference-bench checkouts (cloned by the user, see each recipe's README)
+llm-inference-bench/
+
+__pycache__/
+*.pyc
+.DS_Store
