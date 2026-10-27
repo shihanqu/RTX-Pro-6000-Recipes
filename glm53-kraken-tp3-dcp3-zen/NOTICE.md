@@ -1,5 +1,8 @@
 # Third-party notices
 
+This recipe's original scripts and documentation are covered by its [MIT License](LICENSE).
+That license does not relicense any of the third-party components below.
+
 This recipe contains only configuration and helper scripts. It does not include or redistribute any model weights,
 container images or third-party source code. The components it downloads or runs belong to their authors and
 stay under their own terms. Read them before you use them.

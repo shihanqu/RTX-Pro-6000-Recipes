@@ -1,0 +1,12 @@
+# Local settings and Python environment.
+.env
+.venv/
+
+# Generated validation output and benchmark checkout.
+results/
+logs/
+*.log
+llm-inference-bench/
+
+__pycache__/
+*.pyc

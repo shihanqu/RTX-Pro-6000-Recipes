@@ -222,7 +222,7 @@ same if you run it by hand.
 
 ## Licence and attribution
 
-- The scripts and documentation in this repository are released under the [MIT License](../LICENSE). That licence covers only this repository's own files, not the checkpoint or the container image.
+- This recipe's original scripts and documentation are released under the [MIT License](LICENSE). That licence does not cover the checkpoint or the container image.
 - The checkpoint is licensed under the Local Inference Lab License, Version 1.0: **do not re-upload or mirror it**. Any
   project, model card or service that runs it must begin its README with the notice at the top of this file.
 - The container image and the vLLM/B12X code in it belong to their authors, under their own licences.

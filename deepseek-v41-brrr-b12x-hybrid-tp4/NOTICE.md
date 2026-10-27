@@ -1,7 +1,7 @@
 # Third-party notices
 
-The original recipe wrappers and documentation are MIT licensed under the repository's
-[LICENSE](../LICENSE). The small `patches/hybrid-dispatch.patch` is a derivative of
+The original recipe wrappers and documentation are MIT licensed under this recipe's
+[LICENSE](LICENSE). The small `patches/hybrid-dispatch.patch` is a derivative of
 BRRR's Apache-2.0 decoder source and remains Apache-2.0. The unmodified upstream
 [BRRR notice](licenses/BRRR-NOTICE) and [Apache-2.0 text](licenses/Apache-2.0.txt)
 accompany it. This does not relicense any third-party component.

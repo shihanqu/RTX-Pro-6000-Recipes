@@ -1,4 +1,15 @@
+# Local settings, builds and tool environments.
+.env
 .build/
 .state/
 .bench/
 .venv/
+
+# Generated validation output and optional benchmark checkouts.
+results/
+logs/
+*.log
+llm-inference-bench/
+
+__pycache__/
+*.pyc

@@ -1,14 +1,4 @@
-# Local settings (every recipe keeps its own .env next to its compose.yaml)
+# Repository-wide credential and OS metadata safeguards.
+# Recipe-specific generated files are covered by each recipe's .gitignore.
 .env
-
-# Benchmark output and logs
-results/
-logs/
-*.log
-
-# llm-inference-bench checkouts (cloned by the user, see each recipe's README)
-llm-inference-bench/
-
-__pycache__/
-*.pyc
 .DS_Store
