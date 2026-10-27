@@ -1,0 +1,218 @@
+{
+  "repo": "fraserprice/DeepSeek-4.1-Flash-1017-BRRR",
+  "revision": "0bc4dbd0a15458e0957b899d72c7a5089e3335a5",
+  "file_count": 35,
+  "total_bytes": 297507,
+  "files": [
+    {
+      "file": ".dockerignore",
+      "bytes": 97,
+      "algorithm": "sha256",
+      "hash": "3885267bfa9502f9168ae68129c40e590c6ed77db28eb3a55e8d484eb451e007"
+    },
+    {
+      "file": ".gitignore",
+      "bytes": 48,
+      "algorithm": "sha256",
+      "hash": "b7f7bc6af04cd1e00ca7a65d0ac172e92b2e76d5a071a2cc8d043e6a69ac2bc9"
+    },
+    {
+      "file": ".python-version",
+      "bytes": 5,
+      "algorithm": "sha256",
+      "hash": "7b55f8e67b5623c4bef3fa691288da9437d79d3aba156de48d481db32ac7d16d"
+    },
+    {
+      "file": "Dockerfile",
+      "bytes": 2480,
+      "algorithm": "sha256",
+      "hash": "4aa835c829bed6b73b17014c0065815db9e15ac3a9177a9b9e18e5d0abf504f3"
+    },
+    {
+      "file": "LICENSE",
+      "bytes": 11358,
+      "algorithm": "sha256",
+      "hash": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    {
+      "file": "NOTICE",
+      "bytes": 877,
+      "algorithm": "sha256",
+      "hash": "63439d72a28e8031ac342dd25e754bc0158c83b195c7a9c30651d14b77dcae82"
+    },
+    {
+      "file": "README.md",
+      "bytes": 13029,
+      "algorithm": "sha256",
+      "hash": "b7f478145c8acfd937e631ff1e26bd0fe70d1a3546e0fe2e9cf34879dfe083a5"
+    },
+    {
+      "file": "entrypoint.sh",
+      "bytes": 1278,
+      "algorithm": "sha256",
+      "hash": "7118a1aeda2a102b08c38bed5dad0d066688a9eaf590ba9b670f53a1c9e3f7e2"
+    },
+    {
+      "file": "pyproject.toml",
+      "bytes": 560,
+      "algorithm": "sha256",
+      "hash": "6ba566b2b289b850ddd37e6fe41a2d728a651b6cd16e5362b824f05a860f40c9"
+    },
+    {
+      "file": "serve.sh",
+      "bytes": 3082,
+      "algorithm": "sha256",
+      "hash": "5001a7da93a20abf9816d4d935e71d734bf20dcfa2ed6e59ed32bdaface79341"
+    },
+    {
+      "file": "site-packages/brrr.pth",
+      "bytes": 17,
+      "algorithm": "sha256",
+      "hash": "e2694f89e0afe4c95adc1cdea073ecaf100a4209f753c2eb4b538982dff129a5"
+    },
+    {
+      "file": "src/brrr/__init__.py",
+      "bytes": 0,
+      "algorithm": "sha256",
+      "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "file": "src/brrr/bench.py",
+      "bytes": 12369,
+      "algorithm": "sha256",
+      "hash": "f0248bdd842b6e25f152f23193780ca1fc1c4021557fceecb7557f49884bed46"
+    },
+    {
+      "file": "src/brrr/candidates.py",
+      "bytes": 3069,
+      "algorithm": "sha256",
+      "hash": "9be8a6fdd6069d4504135a9e83f3754d4bb02157f75af9b9a50a343bca3d96fc"
+    },
+    {
+      "file": "src/brrr/cuext.py",
+      "bytes": 1303,
+      "algorithm": "sha256",
+      "hash": "7d9c4add2af4a7cdfee931c1622d5067b3492f6ee37677237f89c102ee6b66cc"
+    },
+    {
+      "file": "src/brrr/decoder.py",
+      "bytes": 8931,
+      "algorithm": "sha256",
+      "hash": "43aa9e23243fdf3d0614f5c3fce00c5212cf44c665eebc3dbac54e254318ef41"
+    },
+    {
+      "file": "src/brrr/engram_nvme.py",
+      "bytes": 6726,
+      "algorithm": "sha256",
+      "hash": "20ce097fa1ddfd66931abe0c8658b80a58abcca99d6cdc9eb102558e24b4a158"
+    },
+    {
+      "file": "src/brrr/hook.py",
+      "bytes": 1225,
+      "algorithm": "sha256",
+      "hash": "69f7c7cfe56eeec566d419e07363ab238f1594e232292550490e17bb24a99149"
+    },
+    {
+      "file": "src/brrr/kernels/candidates.cu",
+      "bytes": 10954,
+      "algorithm": "sha256",
+      "hash": "d52f68664fae69d660c90e80b425f845eda7c99c2f8cb49cd4a0f6de83f51f7a"
+    },
+    {
+      "file": "src/brrr/kernels/common.cuh",
+      "bytes": 6623,
+      "algorithm": "sha256",
+      "hash": "5feb3d0b091c8ef6f6fa67885276ab5b15c1706e4851094f0e097c000b2b9291"
+    },
+    {
+      "file": "src/brrr/kernels/decoder.cu",
+      "bytes": 83042,
+      "algorithm": "sha256",
+      "hash": "755a7e4d6e76f9aaad3d2d4b5173423ef2014da913361a0fc77bd0fbcedbac59"
+    },
+    {
+      "file": "src/brrr/kernels/engram_nvme.cpp",
+      "bytes": 4715,
+      "algorithm": "sha256",
+      "hash": "1cdf2709c06092d73d92dd1706a20600b2373625cc836e394e3ddaa45c5a0117"
+    },
+    {
+      "file": "src/brrr/kernels/fp8_rows.cuh",
+      "bytes": 3279,
+      "algorithm": "sha256",
+      "hash": "dc08a9481b330a476ca3b69850a499bdbfa4d5753d5a4f36c43fee03f46f95e9"
+    },
+    {
+      "file": "src/brrr/kernels/host.cuh",
+      "bytes": 2668,
+      "algorithm": "sha256",
+      "hash": "0b5b698ae9e5929ca70ed0ee5b75347cc4f49b4ae43c2c7efd0aac8ce8703f96"
+    },
+    {
+      "file": "src/brrr/kernels/phased_all_reduce.cu",
+      "bytes": 8297,
+      "algorithm": "sha256",
+      "hash": "b253d9eb3b5f1ecfc97f3e22754d1f7646ab9d8c2bdaefac2db00bebe50e1fc1"
+    },
+    {
+      "file": "src/brrr/kernels/skinny.cu",
+      "bytes": 7974,
+      "algorithm": "sha256",
+      "hash": "4b0fdda9983ee14d007e8009112571a52af09277b23c5c7154133941b4c6e89a"
+    },
+    {
+      "file": "src/brrr/kernels/sparse_decode.cu",
+      "bytes": 16222,
+      "algorithm": "sha256",
+      "hash": "fab51ddccd59977125f5022fb2efc377a74679d4415cde07e056dfe112356c53"
+    },
+    {
+      "file": "src/brrr/patches.py",
+      "bytes": 12273,
+      "algorithm": "sha256",
+      "hash": "e93f638c6ed733061842124d5c2b20a3688c180911d4fc25c91aefba0a8ddaf7"
+    },
+    {
+      "file": "src/brrr/phased_all_reduce.py",
+      "bytes": 2513,
+      "algorithm": "sha256",
+      "hash": "9711277e95fb96c6324f18698f54b1e9b34e023e205e67ed9e8e9b66049229e6"
+    },
+    {
+      "file": "src/brrr/prebuild.py",
+      "bytes": 248,
+      "algorithm": "sha256",
+      "hash": "11f08fa6a5fef9e6f2e6eebf98530483d5a987b6f309e7ddf65bbcd456056b74"
+    },
+    {
+      "file": "src/brrr/skinny.py",
+      "bytes": 1278,
+      "algorithm": "sha256",
+      "hash": "ffc6c4e20caba331e83b71e11b02e6bc5ced927794f56708f753473636a20d87"
+    },
+    {
+      "file": "src/brrr/sparse_decode.py",
+      "bytes": 1768,
+      "algorithm": "sha256",
+      "hash": "7ff98bd985aea6e0cfc9028796c999d402872657afd080f9bb5980f0e1955d80"
+    },
+    {
+      "file": "src/brrr/vp_sampling.py",
+      "bytes": 24311,
+      "algorithm": "sha256",
+      "hash": "3e6738b34c42fc15ec9da173312413e352e0480114891cf490acfb9b926c525e"
+    },
+    {
+      "file": "uv.lock",
+      "bytes": 24497,
+      "algorithm": "sha256",
+      "hash": "bc58dfb471b5a0c6f718ef34d91e95334b12f6d9439dd9ea0dc13a3e493a41f9"
+    },
+    {
+      "file": "vllm.patch",
+      "bytes": 20391,
+      "algorithm": "sha256",
+      "hash": "56569f931fe4a8098f7f61f16b8570f6de5098a913e5235cad0f12c8e1aaa13b"
+    }
+  ]
+}

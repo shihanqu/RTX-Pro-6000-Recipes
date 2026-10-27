@@ -1,0 +1,57 @@
+services:
+  deepseek:
+    image: ${HYBRID_IMAGE:?run build.sh first}
+    pull_policy: never
+    container_name: deepseek-v41-brrr-b12x-hybrid
+    init: true
+    restart: unless-stopped
+    ipc: host
+    security_opt:
+      - seccomp=unconfined
+    ulimits:
+      memlock: {soft: -1, hard: -1}
+      stack: {soft: 67108864, hard: 67108864}
+    cpuset: ${CPUSET:-}
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${HOST_PORT:-8000}:8000"
+    environment:
+      PORT: "8000"
+      ADAPTIVE: "false"
+      CUDA_VISIBLE_DEVICES: ${GPU_UUIDS:?use launch.sh to select devices}
+      VLLM_USE_BREAKABLE_CUDAGRAPH: "1"
+      BRRR_FUSED_MAX_ROWS: "8"
+    volumes:
+      - type: bind
+        source: ${MODEL_DIR:?set MODEL_DIR}
+        target: /model
+        read_only: true
+        bind: {create_host_path: false}
+      - type: bind
+        source: ${RUNTIME_CACHE_DIR:?set RUNTIME_CACHE_DIR}
+        target: /cache/jit
+        bind: {create_host_path: false}
+    # Remaining arguments and all low-level runtime variables are inherited
+    # unchanged from the verified pinned BRRR entrypoint and base image.
+    command:
+      - --served-model-name
+      - DeepSeek-4.1-Flash-1017-BRRR
+      - deepseek-v4.1-flash
+      - --max-num-seqs
+      - "32"
+      - --max-cudagraph-capture-size
+      - "256"
+      - --speculative-config
+      - '{"method":"dspark","num_speculative_tokens":2,"draft_sample_method":"probabilistic","rejection_sample_method":"block","enable_adaptive_verification":false,"attention_backend":"B12X","moe_backend":"b12x"}'
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck:
+      test: [CMD, /opt/venv/bin/python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30m
+      retries: 3

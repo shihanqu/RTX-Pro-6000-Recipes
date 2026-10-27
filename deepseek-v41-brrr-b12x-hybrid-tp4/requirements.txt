@@ -1,0 +1,4 @@
+huggingface_hub==1.6.0
+httpx==0.28.1
+rich==13.7.1
+psutil==7.2.2

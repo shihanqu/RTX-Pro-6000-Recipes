@@ -1,0 +1,26 @@
+{
+  "date_utc": "2026-10-27",
+  "public_build_passed": true,
+  "upstream_build_cache_reused": true,
+  "patch_before_and_after_sha256_verified": true,
+  "normalized_effective_arguments_match_measured_hybrid": true,
+  "runtime_environment_matches_measured_hybrid": true,
+  "runtime_source_fingerprints": {
+    "brrr": {
+      "file_count": 22,
+      "sha256": "14ba2741d6c3d223fcd0141ad600908ad3d8a454f4eb3b5f5a7e35ffa23bca0e"
+    },
+    "vllm": {
+      "file_count": 2868,
+      "sha256": "c62425b2581f48d665c0fc2b48224720b728f1a3472e370d6feca9d66a5dd9c3"
+    }
+  },
+  "compose_config_passed": true,
+  "loaded_host_prerequisites_passed": true,
+  "unit_tests_passed": 15,
+  "pinned_source_files_hash_verified": 35,
+  "pinned_benchmark_checkout_and_cli_verified": true,
+  "private_information_scans_passed": true,
+  "live_service_restarted": false,
+  "scope": "Build/configuration/source-equivalence verification, not a separate cold compilation or a new performance run. Effective argument comparison normalizes JSON whitespace and ignores API port; environment comparison excludes selected device identities and API port. Source fingerprints hash sorted relative paths and SHA-256 values of .py/.cu/.cuh/.cpp files."
+}

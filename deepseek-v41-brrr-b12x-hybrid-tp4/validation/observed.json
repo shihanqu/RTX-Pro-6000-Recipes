@@ -1,0 +1,300 @@
+{
+  "date_utc": "2026-10-27",
+  "recipe": "Original DeepSeek-V4.1 BRRR/B12X hybrid TP4",
+  "settings": {
+    "max_sequences": 32,
+    "max_context": 1048576,
+    "memory_utilization": 0.96,
+    "graph_mode": "FULL_AND_PIECEWISE",
+    "graph_cap": 256,
+    "dspark_depth": 2,
+    "default_reasoning": true
+  },
+  "benchmark": {
+    "version": "0.6.2",
+    "source_sha256": "053989edff8c9c93e2b96e61342b2ffbd9851e03deba17e6d3fc96fcd6694c1e",
+    "recipe_reproduction_commit": "ccd9ad8ced7e387794391bfb0ac6d99b1f66ba6f",
+    "commit_note": "Public commit whose script bytes match the captured checksum; full-suite artifacts did not record Git HEAD."
+  },
+  "full_matrix": {
+    "concurrencies": [
+      1,
+      2,
+      4,
+      8,
+      16,
+      32
+    ],
+    "context_tokens": [
+      0,
+      16384,
+      32768,
+      65536,
+      131072
+    ],
+    "duration_per_cell_seconds": 30,
+    "decode_warmup_seconds": 3,
+    "initial_warmup": {
+      "concurrency": 1,
+      "context_tokens": 131072
+    },
+    "max_output_tokens_per_request": 8192,
+    "ignore_eos": true,
+    "sampling": "No explicit temperature, top_p, or seed; uses server/model defaults. Standard sustained-decode payload does not set reasoning_effort. Do not label this standard matrix maximum reasoning.",
+    "kv_budget_tokens": 8106211,
+    "actual_input_token_range": [
+      91,
+      128520
+    ],
+    "output_length_caveat": "8192 is a per-request cap, not the generated length of every stream. Duration mode can recycle completed requests and cancels remaining streams at the end. Stored per-cell output_seq_len_avg spans 1741.4375 to 8192 tokens; completed and in-flight samples must not be conflated.",
+    "aggregate_decode_tokens_per_second_columns": [
+      "context_tokens",
+      "C1",
+      "C2",
+      "C4",
+      "C8",
+      "C16",
+      "C32"
+    ],
+    "aggregate_decode_tokens_per_second": [
+      [
+        0,
+        341.9336178047226,
+        558.8551821119937,
+        633.9993567935951,
+        915.4456121522528,
+        1244.1752992922825,
+        1754.9808354789554
+      ],
+      [
+        16384,
+        331.5667310348242,
+        540.4363034188559,
+        605.441726814187,
+        901.9234556063301,
+        1237.681743810754,
+        1732.022530796885
+      ],
+      [
+        32768,
+        324.7379729513411,
+        null,
+        594.6607813891055,
+        901.0473749668903,
+        1204.8803135121439,
+        1713.6068924068131
+      ],
+      [
+        65536,
+        315.29496735119284,
+        511.15198066355447,
+        589.300581816484,
+        892.5734117723359,
+        1211.0143501210307,
+        1694.123735762167
+      ],
+      [
+        131072,
+        291.15053289578265,
+        486.8368246727891,
+        553.2337743344316,
+        849.3080584931781,
+        1160.9239316093917,
+        1604.5313261234926
+      ]
+    ]
+  },
+  "matrix_validation": {
+    "usable_cells": 29,
+    "total_cells": 30,
+    "failed_cell": {
+      "context_tokens": 32768,
+      "concurrency": 2,
+      "reason": "exact_repetition",
+      "request_errors": 2,
+      "throughput": null
+    },
+    "valid_cells_exact_sampled_concurrency": true,
+    "valid_cells_errors": 0,
+    "valid_cells_queue_underfill_or_capacity_limit": false,
+    "valid_cells_max_client_server_difference_percent": 0.145861,
+    "c1_renewal_caveat": "All C1 cells started two requests/completed one. Sampled concurrency remained 1; brief between-poll overlap cannot be excluded."
+  },
+  "prefill_scouts": {
+    "method": "Client prompt_tokens / TTFT, one sample per context; 8k scout-only and remaining contexts integrated decode scouts. Not a repeated standalone cold-prefill benchmark.",
+    "columns": [
+      "nominal_context_tokens",
+      "actual_prompt_tokens",
+      "TTFT_seconds",
+      "client_tokens_per_second",
+      "server_validation_seconds",
+      "server_validation_tokens_per_second"
+    ],
+    "rows": [
+      [
+        8192,
+        8189,
+        0.434,
+        18864,
+        null,
+        null
+      ],
+      [
+        16384,
+        16211,
+        0.878,
+        18474,
+        0.86,
+        18852
+      ],
+      [
+        32768,
+        32254,
+        1.757,
+        18357,
+        1.735,
+        18588
+      ],
+      [
+        65536,
+        64353,
+        3.653,
+        17616,
+        3.617,
+        17791
+      ],
+      [
+        131072,
+        128520,
+        7.928,
+        16211,
+        7.867,
+        16337
+      ]
+    ],
+    "server_validation_method": "prometheus:kv_computed for 16k through 128k; unavailable for 8k"
+  },
+  "quality_method": {
+    "requests_per_profile": 30,
+    "fixed_concurrency": 30,
+    "reasoning_effort": "max",
+    "temperature": "not explicitly set; server/model default",
+    "top_p": "not explicitly set; server/model default",
+    "seed_base": 20261026,
+    "seed_rule": "seed_base + run_index; run indices 1 through 30",
+    "request_timeout_seconds": 900,
+    "stall_timeout_seconds": 600,
+    "actual_peak_running": 30,
+    "max_waiting": 0,
+    "rates_caveat": "gen_tok_s.avg is mean per-request decode rate, not sum across 30 streams. The field aggregate_gen_tok_s also divides total tokens by SUM of per-request generation durations, not concurrent batch wall time; do not publish it as C30 aggregate throughput.",
+    "prefix_cache_caveat": "Measured profile requests share the same prompt; prefix caching can be reused. Estonia has a prefill scout; LAVD reports prefill_scout=false. These are not independent cold-prefill trials.",
+    "loop_guard_caveat": "Quality profiles are scored for final-answer correctness. The standard decode loop guard does not establish loop-free quality-profile generation."
+  },
+  "lavd30": {
+    "profile_version": 1,
+    "scorer": "ledger_lavd",
+    "scorer_version": 2,
+    "prompt_sha256": "5c83674d5f0fd2a727bf11c521a765f8be4a13087714a2151fc96078018c4aa0",
+    "prompt_tokens": 20277,
+    "result": "30/30 exact; expected 72 tickets and 46 hours",
+    "max_output_tokens_per_request": 100000,
+    "completion_tokens_mean": 19825.633333333335,
+    "completion_tokens_range": [
+      14491,
+      29889
+    ],
+    "mean_request_seconds": 263.6414848677001,
+    "errors": 0,
+    "truncations": 0,
+    "timeouts": 0,
+    "stalls": 0,
+    "hit_max_tokens": 0
+  },
+  "estonia30": {
+    "profile_version": 2,
+    "scorer": "country_exact",
+    "scorer_version": 2,
+    "prompt_sha256": "8c045ba5e8299b2516d81603ba1bc27bad9fcf3583de0aecbf89a9d66b131942",
+    "prompt_tokens": 134187,
+    "result": "30/30 pass; asserted final answer Estonia",
+    "max_output_tokens_per_request": 40000,
+    "completion_tokens_mean": 1734.1666666666667,
+    "completion_tokens_range": [
+      839,
+      3047
+    ],
+    "mean_request_seconds": 26.10527107236673,
+    "errors": 0,
+    "truncations": 0,
+    "timeouts": 0,
+    "stalls": 0,
+    "hit_max_tokens": 0
+  },
+  "separate_c2_32k_followup": {
+    "concurrency": 2,
+    "context_tokens": 32768,
+    "duration_per_repeat_seconds": 30,
+    "max_output_tokens_per_request": 8192,
+    "decode_warmup_seconds": 3,
+    "initial_warmup": {
+      "concurrency": 1,
+      "context_tokens": 32768
+    },
+    "aggregate_tokens_per_second": [
+      543.4348407123628,
+      527.29323760731,
+      543.3943774788187,
+      531.9364706151447,
+      540.069308152848
+    ],
+    "usable_runs": 5,
+    "errors": 0,
+    "interpretation": "Did not reproduce the repeated-output failure in 5 standalone reruns. Different initial warmup context and run order mean this is not a full-matrix replay and does not prove the issue fixed. Preserve the original matrix cell as invalid; do not silently substitute a repeat."
+  },
+  "separate_strict_0k_checks": {
+    "concurrencies": [
+      1,
+      4,
+      16,
+      32
+    ],
+    "duration_seconds": 30,
+    "max_output_tokens": 32768,
+    "warmup_seconds": 3,
+    "aggregate_tok_s": {
+      "1": 353.6235581315668,
+      "4": 624.4853348308114,
+      "16": 1243.1005600341582,
+      "32": 1788.8615829494938
+    },
+    "final_recheck_aggregate_tok_s": {
+      "1": 347.4424394406466,
+      "4": 613.4126231307831,
+      "16": 1248.7994455489927,
+      "32": 1761.9037185515322
+    },
+    "independent_60s_aggregate_tok_s": {
+      "1": 386.0981338505021,
+      "4": 635.5465115915188,
+      "16": 1260.368394548099,
+      "32": 1754.713121530146
+    },
+    "independent_60s_max_output_tokens": 65536,
+    "guards": "Exact concurrency, no renewal/queue/underfill/errors/loops; continuous usage and server counters cross-checked."
+  },
+  "additional_quality": {
+    "vision_ocr_color": "4/4",
+    "actual_active_requests": 32,
+    "arithmetic": "32/32",
+    "structured_output_and_tool_roundtrip": true,
+    "ordinary_eos_completion_tokens": 2614,
+    "ordinary_eos_finish_reason": "stop",
+    "extra_60s_forced_ignore_eos_c1_failure": {
+      "reason": "exact_repetition",
+      "observed_completion_tokens": 21615,
+      "excluded": true,
+      "unchanged_retry_valid": true
+    }
+  },
+  "privacy": "Only allowlisted public model/configuration/version and numeric result fields. No raw completions, command lines, host diagnostics, private network/device identifiers, home paths or credentials."
+}
