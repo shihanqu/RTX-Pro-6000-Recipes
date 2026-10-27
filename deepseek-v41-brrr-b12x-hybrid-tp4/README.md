@@ -267,10 +267,10 @@ Engram reader are **BRRR's work**, not new inventions of this configuration fork
 The original hybrid excludes later Sonar/Aphrodite, row-cache, tensor-core Markov,
 and dense split-K flag experiments; they did not show a reliable gain in the matching tests.
 
-### The Giants Under BRRR
+### Attribution
 
-- **DeepSeek:** native model, tokenizer, vision and draft-head work; original checkpoint above.
-- **Fraser Price / BRRR:** persistent fused decode/prologue kernels, SSD Engram
+- **[DeepSeek](https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash-1017):** native model, tokenizer, vision and draft-head work.
+- **[Fraser Price / BRRR](https://huggingface.co/fraserprice/DeepSeek-4.1-Flash-1017-BRRR):** persistent fused decode/prologue kernels, SSD Engram
   pipelining, specialized attention/top-k/projections, phased PCIe communication,
   vocabulary-sharded drafting/verification and tool-result prompt fixes.
 - **[Local Inference Lab's vLLM fork](https://github.com/local-inference-lab/vllm):**
