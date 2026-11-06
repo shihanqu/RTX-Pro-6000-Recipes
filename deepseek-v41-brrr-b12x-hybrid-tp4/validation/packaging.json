@@ -1,26 +1,47 @@
 {
-  "date_utc": "2026-10-27",
-  "public_build_passed": true,
-  "upstream_build_cache_reused": true,
-  "patch_before_and_after_sha256_verified": true,
-  "normalized_effective_arguments_match_measured_hybrid": true,
-  "runtime_environment_matches_measured_hybrid": true,
-  "runtime_source_fingerprints": {
-    "brrr": {
-      "file_count": 22,
-      "sha256": "14ba2741d6c3d223fcd0141ad600908ad3d8a454f4eb3b5f5a7e35ffa23bca0e"
-    },
-    "vllm": {
-      "file_count": 2868,
-      "sha256": "c62425b2581f48d665c0fc2b48224720b728f1a3472e370d6feca9d66a5dd9c3"
-    }
+  "verification_date": "2026-11-06",
+  "benchmark_date": "2026-10-28",
+  "reference_image_id": "sha256:f431c5b74efe1a32d6f5bb80118f27024a12c9c3a1af91ed1512d16d16e39268",
+  "benchmark_image_and_launch_arguments_match_reference": true,
+  "pinned_upstream_source_files_verified": 35,
+  "patches_reproduce_reference_file_sha256": true,
+  "runtime_file_sha256": {
+    "brrr/decoder.py": "b4fb02f11d2ec8754463720de3141fd1d797c7cdf93f2671264503f6430ae056",
+    "brrr/engram_nvme.py": "a6780ea197440246a0a86650cdc8201f92b1eb329c48871916f4ed912d95d92f",
+    "brrr/kernels/engram_ram.cpp": "a4a02801a7d5ffbfb298cb0a005caf7971680df29d639086f5c69b6b0bcd3ef5",
+    "brrr-serve": "7118a1aeda2a102b08c38bed5dad0d066688a9eaf590ba9b670f53a1c9e3f7e2"
   },
-  "compose_config_passed": true,
-  "loaded_host_prerequisites_passed": true,
-  "unit_tests_passed": 15,
-  "pinned_source_files_hash_verified": 35,
-  "pinned_benchmark_checkout_and_cli_verified": true,
-  "private_information_scans_passed": true,
-  "live_service_restarted": false,
-  "scope": "Build/configuration/source-equivalence verification, not a separate cold compilation or a new performance run. Effective argument comparison normalizes JSON whitespace and ignores API port; environment comparison excludes selected device identities and API port. Source fingerprints hash sorted relative paths and SHA-256 values of .py/.cu/.cuh/.cpp files."
+  "source_comparison": {
+    "pinned_upstream_layers_match": true,
+    "runtime_source_files": {
+      "brrr": 23,
+      "vllm": 2868
+    },
+    "runtime_tree_sha256": {
+      "brrr": "efd6f3128750a404c71c71c2bc38e0b7b768fb93f51215bdb7e044c4e53700a4",
+      "vllm": "8c33e5614f12d6626e31a21e65b3d1f9ed058c76c72a42b0e496f0aee49374d3"
+    },
+    "runtime_source_differences_vs_verified_upstream": [
+      "brrr/decoder.py",
+      "brrr/engram_nvme.py",
+      "brrr/kernels/engram_ram.cpp"
+    ]
+  },
+  "compose_comparison": {
+    "arguments_match": true,
+    "environment_matches_excluding_port": true,
+    "entrypoint_matches_reference_image": true,
+    "volume_roles_and_permissions_match": true,
+    "memory_and_swap_limits_match": true,
+    "ipc_and_seccomp_match": true,
+    "ulimits_match": true,
+    "init_and_restart_policy_match": true,
+    "gpu_reservations_match": true,
+    "reference_image_contains_cpu_test_step": true
+  },
+  "unit_tests_passed": 21,
+  "public_privacy_scan_passed": true,
+  "full_cold_rebuild_completed": false,
+  "fresh_image_gpu_benchmark_run": false,
+  "scope": "Source and configuration equivalence to the existing benchmark image. The Compose comparison normalizes speculative JSON, device selection, API port, mount paths and engine-added security metadata. Runtime fingerprints hash sorted JSON maps of relative .py/.cu/.cuh/.cpp paths to SHA-256 digests. A full cold rebuild was not completed on the serving host; the published build serializes compilation and should be run before loading the model. Reported speeds are the October 28 reference measurements, not a fresh package benchmark."
 }

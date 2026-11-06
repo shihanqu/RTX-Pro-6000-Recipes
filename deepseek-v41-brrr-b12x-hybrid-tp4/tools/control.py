@@ -2,6 +2,7 @@
 """Read-only host checks and an idempotent launcher; never kill another service."""
 import argparse
 import csv
+from datetime import datetime
 import fcntl
 import json
 import os
@@ -11,8 +12,34 @@ import subprocess
 import time
 import urllib.request
 
-from config import ROOT,PINS,STATE,PROJECT,CONTAINER,MODELS,settings,inspect,run
+from config import (ROOT,PINS,STATE,PROJECT,CONTAINER,MODELS,PROOF_DIR,RUNTIME_FILE_SHA256,
+                    GIB,available_memory,settings,inspect,run)
 from fetch import manifest
+
+RAM_ENGRAM_BYTES=196_613_849_600
+REFERENCE_WORKING_SET_BYTES=33_228_165_120
+MIN_START_MEMORY_BYTES=RAM_ENGRAM_BYTES+REFERENCE_WORKING_SET_BYTES+6*GIB
+CONTAINER_MEMORY_LIMIT_BYTES=220*GIB
+
+
+def check_ram_headroom():
+    available=available_memory()
+    if available<MIN_START_MEMORY_BYTES:
+        raise RuntimeError(f'RAM Engrams need {MIN_START_MEMORY_BYTES/GIB:.2f} GiB available before startup; '
+                           f'only {available/GIB:.2f} GiB is available')
+
+
+def verify_ram_proof(directory,started_at):
+    started=datetime.fromisoformat(started_at.replace('Z','+00:00')).timestamp()
+    proof=[json.loads(path.read_text()) for path in directory.glob('rank-*-layer-*.json')]
+    expected={(rank,layer) for rank in range(4) for layer in (1,14)}
+    if len(proof)!=len(expected) or {(row['tp_rank'],row['layer_id']) for row in proof}!=expected:
+        raise RuntimeError('Expected one RAM Engram residency proof for each rank and layer')
+    if not all(row['timestamp']>=started and row['locked'] is True and row['source_fd_closed'] is True
+               and row['bytes']==row['resident_bytes']==row['rows']*256>0 for row in proof):
+        raise RuntimeError('RAM Engram proof is stale, unlocked, incomplete, or still file-backed')
+    if sum(row['bytes'] for row in proof)!=RAM_ENGRAM_BYTES:
+        raise RuntimeError('RAM Engram bytes do not match the measured checkpoint')
 
 
 def gpu_records():
@@ -65,7 +92,7 @@ def checkpoint_checks(config):
     for number in (47,48):
         path=config['model']/f'model-{number:05d}-of-00048.safetensors'
         kind=subprocess.check_output(['findmnt','-n','-o','FSTYPE','-T',str(path.resolve())],text=True).strip()
-        if kind not in ('ext4','xfs'):raise RuntimeError('Disk Engram requires a local ext4/XFS filesystem')
+        if kind not in ('ext4','xfs'):raise RuntimeError('Direct Engram preload requires a local ext4/XFS filesystem')
 
 
 def image_checks():
@@ -76,13 +103,14 @@ def image_checks():
     if not image or image['Id']!=receipt.get('image_id'):raise RuntimeError('Image tag changed since build verification')
     for key in ('base_image','brrr_revision'):
         if receipt.get(key)!=PINS[key]:raise RuntimeError('Build receipt provenance mismatch')
-    if receipt.get('decoder_sha256')!=PINS['hybrid_decoder_sha256']:raise RuntimeError('Wrong dispatch patch')
+    if receipt.get('runtime_file_sha256')!=RUNTIME_FILE_SHA256:
+        raise RuntimeError('Build receipt does not verify the measured RAM-Engram runtime')
     return image
 
 
 def compose(config,image,uuids,*args,capture=False):
     environment={**os.environ,'MODEL_DIR':str(config['model']),'RUNTIME_CACHE_DIR':str(config['cache']),
-        'HYBRID_IMAGE':image['Id'],'GPU_UUIDS':','.join(uuids)}
+        'HYBRID_IMAGE':image['Id'],'GPU_UUIDS':','.join(uuids),'RAM_PROOF_DIR':str(PROOF_DIR)}
     return run(['docker','compose','-p',PROJECT,'-f',str(ROOT/'compose.yaml'),
                 '--env-file',str(ROOT/'.env'),*args],env=environment,
                 **({'capture_output':True,'text':True} if capture else {}))
@@ -98,7 +126,8 @@ def assert_idle(uuids,port):
 
 
 def verify_running(info,config,image,uuids):
-    if info['Image']!=image['Id'] or not info['State']['Running'] or info['State']['OOMKilled']:
+    if (info['Image']!=image['Id'] or not info['State']['Running'] or info['State']['OOMKilled']
+            or info['RestartCount']!=0):
         raise RuntimeError('Existing container is not the expected running image')
     if info['Config']['Labels'].get('com.docker.compose.project')!=PROJECT:
         raise RuntimeError('Container name belongs to another project')
@@ -112,19 +141,29 @@ def verify_running(info,config,image,uuids):
     if not binds or binds[0]['HostPort']!=str(config['port']) or binds[0]['HostIp']!=config['bind']:
         raise RuntimeError('Running port/bind address differs')
     mounts={row['Destination']:row for row in info['Mounts']}
-    if set(mounts)!={'/model','/cache/jit'} or mounts['/model']['Source']!=str(config['model']) or mounts['/model']['RW']:
+    if set(mounts)!={'/model','/cache/jit','/ram-proof'} or mounts['/model']['Source']!=str(config['model']) or mounts['/model']['RW']:
         raise RuntimeError('Unexpected model/cache mount')
     if mounts['/cache/jit']['Source']!=str(config['cache']):raise RuntimeError('Runtime cache path changed')
-    if info['HostConfig']['RestartPolicy']['Name']!='unless-stopped':raise RuntimeError('Unexpected restart policy')
+    if mounts['/ram-proof']['Source']!=str(PROOF_DIR) or not mounts['/ram-proof']['RW']:
+        raise RuntimeError('Unexpected RAM residency proof mount')
+    host=info['HostConfig']
+    if host['Memory']!=CONTAINER_MEMORY_LIMIT_BYTES or host['MemorySwap']!=CONTAINER_MEMORY_LIMIT_BYTES:
+        raise RuntimeError('RAM-Engram recipe requires the measured 220 GiB no-swap cgroup limit')
+    if host['RestartPolicy']['Name']!='no':raise RuntimeError('Unexpected restart policy')
 
 
-def wait_ready(config,image,uuids):
+def wait_ready(config,image,uuids,guard_startup=False):
     host='127.0.0.1' if config['bind'] in ('0.0.0.0','127.0.0.1') else config['bind']
     deadline=time.monotonic()+int(os.environ.get('READY_TIMEOUT_S','5400'))
     last=0
     while time.monotonic()<deadline:
         info=inspect('container',CONTAINER)
         if not info or not info['State']['Running']:raise RuntimeError('Server stopped; inspect launch.sh logs')
+        if (guard_startup and info['Image']==image['Id']
+                and info['Config']['Labels'].get('com.docker.compose.project')==PROJECT
+                and available_memory()<2*GIB):
+            run(['docker','stop','--timeout','30',info['Id']])
+            raise RuntimeError('Stopped the new recipe container: host available RAM fell below 2 GiB')
         try:
             with urllib.request.urlopen(f'http://{host}:{config["port"]}/health',timeout=5) as response:
                 if response.status!=200:raise RuntimeError('Not ready')
@@ -132,6 +171,7 @@ def wait_ready(config,image,uuids):
                 models=json.load(response)
             if [row['id'] for row in models['data']]!=MODELS:raise RuntimeError('API aliases differ')
             verify_running(info,config,image,uuids)
+            verify_ram_proof(PROOF_DIR,info['State']['StartedAt'])
             logs=subprocess.run(['docker','logs',CONTAINER],capture_output=True,text=True,check=True)
             text=logs.stdout+logs.stderr
             (STATE/'startup.log').write_text(text)
@@ -141,6 +181,7 @@ def wait_ready(config,image,uuids):
                 raise RuntimeError('Expected full/piecewise graph capture not found')
             pool=re.findall(r'GPU KV cache size: ([\d,]+) tokens',text)
             print(f'Ready: http://127.0.0.1:{config["port"]}/v1; both model aliases verified')
+            print('Engrams: all eight shards resident and locked; source descriptors closed')
             if pool:print('GPU KV cache pool:',pool[-1],'tokens (shared, not per stream)')
             return
         except (OSError,ValueError):pass
@@ -181,16 +222,19 @@ def main():
         if info and info['Config']['Labels'].get('com.docker.compose.project')!=PROJECT:
             raise RuntimeError('Container name belongs to another project; refusing replacement')
         assert_idle(uuids,config['port'])
+        check_ram_headroom()
         probe='import torch; assert torch.cuda.device_count()==4; assert all(torch.cuda.can_device_access_peer(i,j) for i in range(4) for j in range(4) if i!=j); print("All twelve directed CUDA peer-access pairs available")'
         run(['docker','run','--rm','--gpus','all','-e','CUDA_VISIBLE_DEVICES='+','.join(uuids),
              '--entrypoint','/opt/venv/bin/python',image['Id'],'-c',probe])
         assert_idle(uuids,config['port'])
+        check_ram_headroom()
         if args.action=='check':
-            print('Read-only host/image/checkpoint/device checks passed; power limits unchanged')
+            print('Host RAM, image, checkpoint and device checks passed; power limits unchanged')
             return
         config['cache'].mkdir(parents=True,exist_ok=True)
+        PROOF_DIR.mkdir(exist_ok=True)
         compose(config,image,uuids,'up','-d','--no-build')
-        wait_ready(config,image,uuids)
+        wait_ready(config,image,uuids,guard_startup=True)
 
 
 if __name__=='__main__':main()

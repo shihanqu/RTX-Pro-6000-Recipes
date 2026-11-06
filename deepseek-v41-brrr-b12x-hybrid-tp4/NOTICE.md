@@ -1,8 +1,9 @@
 # Third-party notices
 
 The original recipe wrappers and documentation are MIT licensed under this recipe's
-[LICENSE](LICENSE). The small `patches/hybrid-dispatch.patch` is a derivative of
-BRRR's Apache-2.0 decoder source and remains Apache-2.0. The unmodified upstream
+[LICENSE](LICENSE). The runtime changes in `patches/` and `kernels/engram_ram.cpp`
+follow BRRR's Apache-2.0 decoder and Engram backend and are provided under
+Apache-2.0. The unmodified upstream
 [BRRR notice](licenses/BRRR-NOTICE) and [Apache-2.0 text](licenses/Apache-2.0.txt)
 accompany it. This does not relicense any third-party component.
 
@@ -12,8 +13,8 @@ accompany it. This does not relicense any third-party component.
 - Pinned revision: `0bc4dbd0a15458e0957b899d72c7a5089e3335a5`.
 - Copyright 2026 Fraser Price; Apache License 2.0.
 - The build downloads the original source, LICENSE and NOTICE from its publisher,
-  verifies the public checksums, builds it, and adds the dispatch guard. No model
-  weights or container images are redistributed here.
+  verifies the public checksums, builds it, and adds the dispatch guard and
+  RAM reader. No model weights or container images are redistributed here.
 
 ## BRRR's foundations
 

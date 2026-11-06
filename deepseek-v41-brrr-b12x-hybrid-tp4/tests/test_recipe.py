@@ -1,4 +1,5 @@
 import copy
+from datetime import datetime
 import hashlib
 import json
 import os
@@ -12,9 +13,10 @@ from unittest.mock import patch
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'tools'))
 import config
+import build
 import control
 import fetch
-import patch_decoder
+import patch_brrr
 import privacy_check
 import validate
 
@@ -68,16 +70,73 @@ class RecipeTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             (Path(directory)/'decoder.py').write_text('unexpected\n')
             with self.assertRaises(RuntimeError):
-                patch_decoder.apply(Path(directory),ROOT/'patches/hybrid-dispatch.patch',config.PINS)
+                patch_brrr.apply_recipe(Path(directory),ROOT/'patches',config.PINS)
 
     def test_patch_exact_reference(self):
-        source=ROOT/'.build/upstream/src/brrr/decoder.py'
-        if not source.exists():self.skipTest('Fetch pinned upstream source before the integration patch test')
+        source=ROOT/'.build/upstream/src/brrr'
+        if not source.is_dir():self.skipTest('Fetch pinned upstream source before the integration patch test')
         with tempfile.TemporaryDirectory() as directory:
-            target=Path(directory)/'decoder.py'
-            shutil.copyfile(source,target)
-            patch_decoder.apply(Path(directory),ROOT/'patches/hybrid-dispatch.patch',config.PINS)
-            self.assertEqual(config.digest(target),config.PINS['hybrid_decoder_sha256'])
+            target=Path(directory)
+            for filename in ('decoder.py','engram_nvme.py'):
+                shutil.copyfile(source/filename,target/filename)
+            patch_brrr.apply_recipe(target,ROOT/'patches',config.PINS)
+            self.assertEqual(config.digest(target/'decoder.py'),config.PINS['hybrid_decoder_sha256'])
+            self.assertEqual(config.digest(target/'engram_nvme.py'),config.PINS['ram_engram_sha256'])
+
+    def test_ram_kernel_matches_measured_source(self):
+        self.assertEqual(config.digest(ROOT/'kernels/engram_ram.cpp'),config.PINS['ram_kernel_sha256'])
+
+    def test_upstream_prebuild_is_serialized_without_changing_other_steps(self):
+        source=ROOT/'.build/upstream/Dockerfile'
+        if not source.exists():self.skipTest('Fetch pinned upstream source before the integration build test')
+        original=source.read_text().splitlines()
+        updated=build.serialize_prebuild(source.read_text()).splitlines()
+        self.assertEqual(len(original),len(updated))
+        changes=[(old,new) for old,new in zip(original,updated) if old!=new]
+        self.assertEqual(len(changes),1)
+        self.assertIn('"brrr.prebuild"',changes[0][0])
+        self.assertIn('"MAX_JOBS=1"',changes[0][1])
+        self.assertIn('tuple(map(cuext.extension, cuext.SOURCES))',changes[0][1])
+
+    def test_ram_headroom_required_before_preload(self):
+        with patch.object(control,'available_memory',return_value=control.MIN_START_MEMORY_BYTES-1):
+            with self.assertRaisesRegex(RuntimeError,'RAM Engrams need'):
+                control.check_ram_headroom()
+        with patch.object(control,'available_memory',return_value=control.MIN_START_MEMORY_BYTES):
+            control.check_ram_headroom()
+
+    def ram_proof(self,directory):
+        started='2026-10-28T00:00:00Z'
+        timestamp=datetime.fromisoformat(started.replace('Z','+00:00')).timestamp()+1
+        rows,extra=divmod(control.RAM_ENGRAM_BYTES//256,8)
+        for i,(rank,layer) in enumerate((r,l) for r in range(4) for l in (1,14)):
+            count=rows+int(i<extra)
+            (directory/f'rank-{rank}-layer-{layer}.json').write_text(json.dumps({
+                'tp_rank':rank,'layer_id':layer,'rows':count,'bytes':count*256,
+                'resident_bytes':count*256,'locked':True,'source_fd_closed':True,
+                'timestamp':timestamp}))
+        return started
+
+    def test_ram_proof_all_eight_stores(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path=Path(directory)
+            control.verify_ram_proof(path,self.ram_proof(path))
+
+    def test_ram_proof_rejects_stale_or_incomplete_store(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path=Path(directory)
+            started=self.ram_proof(path)
+            shard=path/'rank-0-layer-1.json'
+            good=json.loads(shard.read_text())
+            for key,value in (('timestamp',0),('locked',False),('source_fd_closed',False),
+                              ('resident_bytes',0),('tp_rank',1)):
+                with self.subTest(key=key):
+                    shard.write_text(json.dumps({**good,key:value}))
+                    with self.assertRaises(RuntimeError):
+                        control.verify_ram_proof(path,started)
+            shard.unlink()
+            with self.assertRaises(RuntimeError):
+                control.verify_ram_proof(path,started)
 
     def cell(self):
         return {'context_tokens':0,'concurrency':1,'underfilled':False,'warmup_timed_out':False,
@@ -102,6 +161,17 @@ class RecipeTests(unittest.TestCase):
         result=validate.decode_summary({'results':[row]},False)
         self.assertTrue(result['all_cells_valid'])
         self.assertTrue(result['cells'][0]['renewing_streams'])
+
+    def test_published_table_matches_validated_matrix(self):
+        observed=json.loads((ROOT/'validation/observed.json').read_text())
+        matrix=observed['full_matrix']
+        self.assertEqual(observed['matrix_validation']['usable_cells'],30)
+        self.assertEqual(len(matrix['aggregate_decode_tokens_per_second']),5)
+        readme=(ROOT/'README.md').read_text()
+        for context,*rates in matrix['aggregate_decode_tokens_per_second']:
+            self.assertEqual(len(rates),len(matrix['concurrencies']))
+            row=f'| {context//1024}K | '+' | '.join(f'{rate:.1f}' for rate in rates)+' |'
+            self.assertIn(row,readme)
 
     def test_foreign_gpus_never_stopped(self):
         with patch.object(control.subprocess,'check_output',side_effect=['', 'GPU-placeholder, 123\n']):

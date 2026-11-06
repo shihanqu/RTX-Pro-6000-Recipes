@@ -1,76 +1,66 @@
 # DeepSeek-V4.1 BRRR/B12X Hybrid, TP4
 
-The original, validated **BRRR/B12X hybrid** for **DeepSeek-V4.1-Flash-1017** on
-**four RTX PRO 6000 Blackwell 96 GB** cards: **32 sequences**, **1M configured
-context**, **DSpark 2**, **FP8 GPU KV**, and **NVMe Engram offload**.
+The **BRRR/B12X hybrid** for **DeepSeek-V4.1-Flash-1017** on **four RTX PRO 6000
+Blackwell 96 GB** cards, with **RAM-resident Engrams**, **batch-adaptive DSpark
+4/3/2**, **32 sequences**, a **1,048,576-token per-request limit**, and **FP8 GPU KV**.
 
-Observed default-reasoning decode: **about 350-400 tok/s at C1, 1,250 at C16 and
-1,750 aggregate at C32**. These are not BRRR's reasoning-off code-generation
-numbers, nor a promise for every prompt. Speculative acceptance changes token rates.
+At fresh context the measured rates are **399.8 tok/s at C1** and **1,823.9
+aggregate tok/s at C32** with default reasoning. The reference had **7,832,679
+shared GPU KV tokens**. Speculative acceptance and prompt length affect throughput.
 
 ## Results First
 
-Latest completed full sweep, 2026-10-27, llm-inference-bench **0.6.2**. Aggregate
-sustained decode tok/s, 30-second cells, 3-second warmup, request cap 8192,
-server-default sampling/reasoning. Context labels are nominal, estimated targets.
+October 28, 2026 full sweep using llm-inference-bench **0.6.2** on the RAM-Engram
+image. Aggregate sustained decode tok/s: 30-second cells, 3-second initial C1
+warmup at the largest tested context, 8192 output-token cap per request, and
+server-default sampling and reasoning. Context labels are nominal targets; the
+0K row includes 91 actual prompt tokens.
 
 | Context | C1 | C2 | C4 | C8 | C16 | C32 |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| 0K | 341.9 | 558.9 | 634.0 | 915.4 | 1244.2 | 1755.0 |
-| 16K | 331.6 | 540.4 | 605.4 | 901.9 | 1237.7 | 1732.0 |
-| 32K | 324.7 | **Invalid** | 594.7 | 901.0 | 1204.9 | 1713.6 |
-| 64K | 315.3 | 511.2 | 589.3 | 892.6 | 1211.0 | 1694.1 |
-| 128K | 291.2 | 486.8 | 553.2 | 849.3 | 1160.9 | 1604.5 |
+| 0K | 399.8 | 580.6 | 673.9 | 958.0 | 1283.2 | 1823.9 |
+| 16K | 371.6 | 589.8 | 660.0 | 942.6 | 1252.2 | 1795.4 |
+| 32K | 367.7 | 551.5 | 665.8 | 918.9 | 1257.0 | 1746.1 |
+| 64K | 341.1 | 526.9 | 642.1 | 891.8 | 1225.3 | 1722.0 |
+| 128K | 346.4 | 522.6 | 623.5 | 885.9 | 1187.7 | 1654.2 |
 
-**29/30 usable cells.** C2/32K triggered exact repetition and is not assigned a
-throughput. Five later standalone repeats were clean at 543.4, 527.3, 543.4,
-531.9 and 540.1 tok/s. Their different warmup/order does **not** establish a fix;
-they do not replace the failed matrix cell.
-
-Valid cells maintained the requested sampled concurrency, no queue/underfill or
-errors, and client/server token counters agreed within 0.146%. C1 renewed requests
-at the 8192 cap: these are sustained renewing-stream measurements, not strict
-single-request/no-renewal tests. Sampling between polls cannot rule out a brief overlap.
-
-Separate strict 0K checks used a 32768 cap at 30 seconds, and 65536 at 60 seconds,
-to avoid renewals. A valid independent 60-second confirmation gave:
-
-| C1 | C4 | C16 | C32 |
-| ---: | ---: | ---: | ---: |
-| 386.1 | 635.5 | 1260.4 | 1754.7 |
-
-One other forced ignore-EOS 60-second C1 run repeated after about 21.6K tokens.
-The guard rejected it; it is excluded. The unchanged retry passed. Ordinary
-EOS-stopped inference finished normally. No repetition guard was disabled.
+**30/30 usable cells.** The sweep started after at least three minutes idle.
+All cells maintained the requested sampled concurrency, including 32 active
+streams, with no queueing, underfill, request errors or detected repetition.
+Client and server counters agreed within 0.126%. The repetition guard stayed
+enabled. C1 and C2 renewed requests at the output cap; these are sustained
+stream rates, not strict single-request tests. The benchmark ignores EOS for
+decode timing; ordinary requests still stop normally.
 
 ### Correctness And Prefill
 
 | Test | Conditions | Result |
 | --- | --- | --- |
-| Estonia | 30 requests, C30, explicit maximum reasoning | **30/30 pass**, no truncation/error/stall/timeout |
+| Estonia | 30 requests, C30, explicit maximum reasoning | **30/30 pass**, no truncation/error/stall/timeout; timing not isolated |
 | LAVD | 30 requests, C30, explicit maximum reasoning | **30/30 exact**, no truncation/error/stall/timeout |
-| Vision | Four concurrent image OCR/color requests | **4/4** |
-| Capacity | 32 real active streams, plus arithmetic requests | **32 active**, **32/32 arithmetic** |
-| API features | Both model aliases, JSON schema, tool round trip | Passed |
+| Text and vision | Smoke test on the RAM-Engram image | Passed |
+| Engram residency | Two layers on each of four TP ranks | **8/8 locked and fully resident**; preload file descriptors closed |
 
 Quality profiles used seed base 20261026 (plus run index), normal EOS, default
 temperature/top_p, output caps 40000 (Estonia) and 100000 (LAVD). The decode
-matrix did **not** request maximum reasoning. These are synthetic checks, not a
-general model-quality guarantee; the million-token configured limit was not fully tested.
+matrix did **not** request maximum reasoning. Background traffic resumed during
+Estonia (31 sampled active requests), so its scores are reported without a C30
+timing claim. These are synthetic checks; the full configured context was not tested.
 
 Prefill scouts from that same sweep, one sample per context, **client prompt tokens / TTFT**:
 
 | Nominal | Actual tokens | TTFT (s) | tok/s |
 | --- | ---: | ---: | ---: |
-| 8K | 8189 | 0.434 | 18864 |
-| 16K | 16211 | 0.878 | 18474 |
-| 32K | 32254 | 1.757 | 18357 |
-| 64K | 64353 | 3.653 | 17616 |
-| 128K | 128520 | 7.928 | 16211 |
+| 8K | 8190 | 0.415 | 19722 |
+| 16K | 16212 | 0.831 | 19506 |
+| 32K | 32255 | 1.704 | 18928 |
+| 64K | 64354 | 3.550 | 18127 |
+| 128K | 128521 | 7.719 | 16650 |
 
-These are not repeated standalone cold-prefill trials. Prefix caching can be
-reused, and the estimate-mode calibration cache was not retained. Numeric-only
-records are in [validation/](validation/); no raw saved completions or machine telemetry are published.
+These are single integrated scouts, not repeated standalone cold-prefill trials.
+Prefix caching can be reused. The [results record](validation/observed.json)
+contains numeric summaries and the source report checksum, not prompts,
+saved completions or machine telemetry.
 
 ## Requirements
 
@@ -79,17 +69,21 @@ records are in [validation/](validation/); no raw saved completions or machine t
 | GPUs | 4x RTX PRO 6000 Blackwell Workstation Edition, 96 GB, PCIe Gen5 x16, no NVLink |
 | Fabric | All twelve directed GPU peer-access pairs available; selected GPUs on one NUMA node, mixed NODE/PHB relationships |
 | Power | Measured at 395 W per selected card; scripts never change power limits |
-| CPU/RAM | 24-core Threadripper PRO, 256 GB RAM; not a validated minimum-RAM claim |
-| Storage | Complete 510,311,045,295-byte checkpoint (~475 GiB); fast local ext4/XFS NVMe for the two ~101 GB Engram files; measured on 2x PCIe Gen5 NVMe striped RAID0 |
+| CPU/RAM | Tested on a 24-core Threadripper PRO with 256 GB installed. The launcher requires 220.06 GiB of available RAM before starting; check actual free headroom, not installed capacity |
+| Storage | Complete 510,311,045,295-byte checkpoint (~475 GiB) on local ext4/XFS supporting direct I/O. Fast NVMe helps startup; Engram lookup no longer reads from SSD |
 | Runtime | NVIDIA driver **615.65+** (tested 615.71.09), Docker Engine 29.6.1, Compose 5.3.1, NVIDIA Container Toolkit 1.19.1 |
 | OS | x86_64 Ubuntu 24.04, kernel 7.0.0-38; required host configuration below |
 | Disk overhead | Reference image ~12.9 GB, plus build layers and persistent JIT/autotune cache; allow tens of GB extra |
-| Host tools | Python 3.12 recommended, venv/pip, git, Docker, nvidia-smi, ss, findmnt |
+| Host tools | Python 3.12 recommended, venv/pip, git, Docker with BuildKit, nvidia-smi, ss, findmnt |
 
-The Engram table stays on disk; this does not allocate its full ~203 GB in host
-RAM. CPU scale/row/control buffers are pinned. KV is **GPU-only**, not an SSD/host
-KV connector. All four selected GPUs must be free. Other services were present
-on the test host, but their identities and telemetry are intentionally omitted.
+The eight table shards occupy **196,613,849,600 bytes (183.1 GiB)** of locked,
+anonymous host RAM, plus scale, staging and runtime memory. The backend preloads
+with direct I/O, closes the source descriptors and serves rows from RAM into
+BRRR's existing pinned staging buffers. **KV remains GPU-only.** All four
+selected GPUs must be free. The container has a **220 GiB limit with no swap**
+and does not auto-restart. Do not run other large RAM offloads without checking
+headroom. The [SSD-backed revision](https://github.com/shihanqu/RTX-Pro-6000-Recipes/tree/6f4fd8379724afe6f7b51473581f3459a4f3f0ca/deepseek-v41-brrr-b12x-hybrid-tp4)
+is available for hosts with less RAM.
 
 ## Quick Start
 
@@ -101,10 +95,10 @@ $EDITOR .env
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 
-./build.sh                    # pinned upstream source + base image, then the tiny guard patch
+./build.sh                    # pinned upstream, dispatch patch, RAM backend and CPU tests
 ./download_checkpoint.sh      # ~510 GB from the original publisher; verifies every byte
-./launch.sh check             # read-only host/fabric/idle-device/image/checkpoint checks
-./launch.sh                   # starts only this recipe, waits for readiness and graph verification
+./launch.sh check             # host/RAM/fabric/idle-device/image/checkpoint checks
+./launch.sh                   # starts only this recipe; verifies graphs and RAM residency
 ```
 
 **Before launching, perform the deliberate host setup below.** The scripts do
@@ -118,21 +112,24 @@ present can be checked with `./download_checkpoint.sh --verify`. Use a complete
 real-file directory, not an HF cache snapshot whose symlinks point outside the
 read-only `/model` bind. Hardlinks within a filesystem are fine; never modify shared weights in place.
 
-The build downloads and verifies 35 BRRR source files. It builds BRRR unchanged
-from the pinned LIL base image, then applies the dispatch-only patch with exact
-before/after SHA-256 gates. It does not rely on an unpublished local image. Local
-image IDs can differ across rebuilds; the runtime/code/checkpoint pins are authoritative.
+The build verifies 35 pinned BRRR source files and builds from the LIL image
+digest in `pins.json`. It applies the dispatch and RAM-loader patches with exact
+before/after SHA-256 checks, compiles the RAM reader, and exercises it on the CPU.
+It does not pull the private reference image. The reference image ID is recorded
+in [observed.json](validation/observed.json) for provenance; local build IDs
+can differ. The patched files, kernel source and entrypoint are hash-checked
+against the measured image. See [packaging verification](validation/packaging.json)
+for the scope of those checks.
 
-The public package was built successfully with cached upstream compilation. Its
-2,890 BRRR/vLLM source files, effective arguments and runtime environment match
-the measured hybrid (apart from generic device selection and API port). Compose,
-host prerequisites, pinned benchmark CLI and 15 unit tests passed. This is a
-packaging/equivalence check, not a second performance run on a freshly launched
-container; see [validation/packaging.json](validation/packaging.json).
+Build on an idle Linux Docker host before loading the model. Cold builds need
+at least 8 GiB of available RAM and compile one extension at a time; this
+build-only change does not alter the runtime sources or kernel flags. If
+upgrading the SSD recipe, stop its container explicitly before starting this
+one. No launcher replaces a running service automatically.
 
 First build/start compiles kernels and can take considerably longer than a warm
 start. Keep the runtime cache. The launcher prints the actual KV pool, usually
-around **8.1M shared logical tokens** on the reference setup. It is not 8.1M per
+around **7.83M shared logical tokens** on the reference setup. It is not per
 stream: 32 concurrent slots do not imply 32 simultaneous full-million-token requests.
 
 ```bash
@@ -191,6 +188,9 @@ nvidia-smi topo -p2p w
 
 The launcher also checks CUDA peer access. It does not prove PCIe link bandwidth;
 confirm Gen5 x16 under load and measure the fabric/storage if throughput is low.
+The reference host cleared ACS request/completion redirects on the selected GPU
+root ports only. This is platform-specific; the launcher does not write PCIe
+registers or disable ACS on other devices.
 Reference BAR1 was 128 GiB per card. Other pre-existing boot options were
 `pcie_aspm=off transparent_hugepage=madvise numa_balancing=disable idle=nomwait`;
 they were not isolated in an A/B test and are not asserted necessary.
@@ -212,16 +212,19 @@ GPU utilization number is not proof of correct peer access.
 | Scheduling | 32 sequences; 1,048,576-token per-request cap; 4096 batch-token limit; async scheduling |
 | Memory/KV | GPU utilization 0.96, FP8 KV, GPU-only KV; block size 256, SWA block size 128 |
 | Graphs | `VLLM_USE_BREAKABLE_CUDAGRAPH=1`, FULL_AND_PIECEWISE, capture ceiling 256; no eager or language-model-only flag |
-| Draft | DSpark 2; probabilistic draft, block rejection, adaptive verification off, B12X draft attention/MoE |
+| Draft | DSpark max depth 4; depth **4** at batch 1, **3** at 2-4, **2** at 5-32; probabilistic draft, block rejection, B12X draft attention/MoE |
+| Engrams | RAM reader with locked anonymous tables; direct preload from checkpoint, no runtime SSD lookup; 220 GiB no-swap container |
 | Sampling | Inherited temperature 1.0/top_p 1.0; default reasoning retained; normal EOS for ordinary requests |
 | Features | Vision, auto tool choice, DeepSeek-V4.1 reasoning/tool parsers, prefix cache behavior inherited |
 | NCCL/PCIe | Inherited SYS peer level/read enable; LL/LL128/Simple; 16 channels; 2 MiB buffers; B12X + BRRR phased collectives |
 
 The entrypoint and low-level environment come from checksum-verified BRRR source,
-not hidden host scripts. `compose.yaml` contains the changed flags. At DSpark 2,
-four users already schedule at least twelve verify-token rows before padding,
-so this is **not** a threshold of eight users. Keep graph capacity sufficient
-for sequence count, speculative expansion and padding; changing the depth or graph cap requires rebenchmarking.
+not hidden host scripts. `compose.yaml` contains the overrides. The native
+`num_speculative_tokens_per_batch_size` schedule uses the active decode batch
+size, not the number of clients waiting. It is separate from adaptive
+verification, which stays off. The fused decoder threshold is eight scheduled
+token rows, **not eight users**. Keep graph capacity sufficient for speculative
+expansion and padding; changing the depths or graph cap requires rebenchmarking.
 
 ## Validation Commands
 
@@ -235,8 +238,9 @@ for sequence count, speculative expansion and padding; changing the depth or gra
 ./validate.sh quality  # LAVD30 then Estonia30, both C30 and maximum reasoning
 ```
 
-The full sweep uses an 8192 cap and integrated prefill scouts, matching the
-recorded method. Do not substitute standalone-prefill or exact token targeting
+Run the sweep on an idle endpoint; the reference run waited at least three
+minutes before starting. The full sweep uses an 8192 cap and integrated prefill
+scouts. Do not substitute standalone-prefill or exact token targeting
 and call it the same measurement. Output goes to private, ignored `results/`.
 The wrapper disables only self-update prompts and verifies source bytes/commit;
 it does not change generation, timing, loop guards or scoring. Quality reports
@@ -255,17 +259,17 @@ revision `0bc4dbd0a15458e0957b899d72c7a5089e3335a5`.
 | Decoder eligibility | Fused decoder up to its compiled 128-token limit | Environment-controlled ceiling, set to **8 scheduled tokens**; native B12X above it |
 | CUDA graphs | Breakable off, capture ceiling 128; runtime could resolve to FULL_DECODE_ONLY | Breakable on, ceiling **256**, full and piecewise capture verified |
 | Sequences | 16 | **32**, actual simultaneous execution verified |
-| Draft depth | DSpark 7 | **DSpark 2**, less unproductive verify work on this reasoning workload |
+| Draft depth | DSpark 7 | Native batch-depth schedule **4 / 3 / 2** |
+| Engram lookup | SSD reads through BRRR's NVMe backend | Preload table shards into locked host RAM and reuse BRRR's pinned staging and GPU dequantization |
 | API naming | Official BRRR model ID | Preserve it and add `deepseek-v4.1-flash` compatibility alias |
 | Deployment | Publisher's serve script | Generic paths/devices, safe launcher, verified downloads/builds and repeatable validation |
 | Host | Upstream IOMMU/P2P guidance | Explicit loaded host settings above, with risks and no automatic mutation |
 
 **No new checkpoint, quantization, training, CUDA kernel arithmetic or tokenizer
-was introduced.** The only Python decoder change is the tiny guard patch. Major
-fused kernels, attention, communication, sharded sampling, prompt fixes and SSD
-Engram reader are **BRRR's work**, not new inventions of this configuration fork.
-The original hybrid excludes later Sonar/Aphrodite, row-cache, tensor-core Markov,
-and dense split-K flag experiments; they did not show a reliable gain in the matching tests.
+was introduced.** The fork adds the dispatch guard and a host RAM row reader
+to BRRR's existing interface; it uses the pinned runtime's batch-depth support.
+The fused kernels, attention, communication, sharded sampling, prompt fixes and
+original SSD Engram design are **BRRR's work**.
 
 ### Attribution
 

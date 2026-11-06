@@ -3,5 +3,9 @@
 !pins.json
 !patches/
 !patches/hybrid-dispatch.patch
+!patches/ram-engram.patch
+!kernels/
+!kernels/engram_ram.cpp
 !tools/
-!tools/patch_decoder.py
+!tools/patch_brrr.py
+!tools/test_ram_backend.py

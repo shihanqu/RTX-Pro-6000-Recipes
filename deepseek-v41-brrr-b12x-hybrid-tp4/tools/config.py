@@ -11,6 +11,22 @@ PROJECT='deepseek-v41-brrr-b12x-hybrid'
 CONTAINER=PROJECT
 MODELS=['DeepSeek-4.1-Flash-1017-BRRR','deepseek-v4.1-flash']
 STATE=ROOT/'.state'
+PROOF_DIR=STATE/'ram-proof'
+GIB=1 << 30
+BRRR_PACKAGE='/opt/venv/lib/python3.12/site-packages/brrr'
+RUNTIME_FILE_SHA256={
+    BRRR_PACKAGE+'/decoder.py':PINS['hybrid_decoder_sha256'],
+    BRRR_PACKAGE+'/engram_nvme.py':PINS['ram_engram_sha256'],
+    BRRR_PACKAGE+'/kernels/engram_ram.cpp':PINS['ram_kernel_sha256'],
+    '/usr/local/bin/brrr-serve':PINS['entrypoint_sha256'],
+}
+
+
+def available_memory():
+    for line in Path('/proc/meminfo').read_text().splitlines():
+        if line.startswith('MemAvailable:'):
+            return int(line.split()[1])*1024
+    raise RuntimeError('Cannot read Linux MemAvailable')
 
 
 def digest(path):

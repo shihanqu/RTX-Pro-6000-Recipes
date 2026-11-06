@@ -4,7 +4,9 @@ services:
     pull_policy: never
     container_name: deepseek-v41-brrr-b12x-hybrid
     init: true
-    restart: unless-stopped
+    restart: "no"
+    mem_limit: 220g
+    memswap_limit: 220g
     ipc: host
     security_opt:
       - seccomp=unconfined
@@ -20,6 +22,8 @@ services:
       CUDA_VISIBLE_DEVICES: ${GPU_UUIDS:?use launch.sh to select devices}
       VLLM_USE_BREAKABLE_CUDAGRAPH: "1"
       BRRR_FUSED_MAX_ROWS: "8"
+      BRRR_RAM_PROOF_DIR: /ram-proof
+      BRRR_RAM_LOCKFILE: /ram-proof/allocation.lock
     volumes:
       - type: bind
         source: ${MODEL_DIR:?set MODEL_DIR}
@@ -29,6 +33,10 @@ services:
       - type: bind
         source: ${RUNTIME_CACHE_DIR:?set RUNTIME_CACHE_DIR}
         target: /cache/jit
+        bind: {create_host_path: false}
+      - type: bind
+        source: ${RAM_PROOF_DIR:?use launch.sh to set the proof directory}
+        target: /ram-proof
         bind: {create_host_path: false}
     # Remaining arguments and all low-level runtime variables are inherited
     # unchanged from the verified pinned BRRR entrypoint and base image.
@@ -41,7 +49,7 @@ services:
       - --max-cudagraph-capture-size
       - "256"
       - --speculative-config
-      - '{"method":"dspark","num_speculative_tokens":2,"draft_sample_method":"probabilistic","rejection_sample_method":"block","enable_adaptive_verification":false,"attention_backend":"B12X","moe_backend":"b12x"}'
+      - '{"method":"dspark","num_speculative_tokens":4,"draft_sample_method":"probabilistic","rejection_sample_method":"block","enable_adaptive_verification":false,"attention_backend":"B12X","moe_backend":"b12x","num_speculative_tokens_per_batch_size":[[1,1,4],[2,4,3],[5,32,2]]}'
     deploy:
       resources:
         reservations:

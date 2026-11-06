@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build pinned BRRR unchanged, then add only the validated dispatch patch."""
+"""Build pinned BRRR with bounded compilation, then add the measured runtime changes."""
 import argparse
 import json
 import os
@@ -8,14 +8,27 @@ import shutil
 import subprocess
 import tempfile
 
-from config import ROOT,PINS,STATE,inspect,run,digest
+from config import ROOT,PINS,STATE,RUNTIME_FILE_SHA256,GIB,available_memory,inspect,run,digest
 from fetch import fetch
+
+
+def serialize_prebuild(dockerfile):
+    before='RUN ["/opt/venv/bin/lil-runtime-bootstrap", "/opt/venv/bin/python", "-m", "brrr.prebuild"]'
+    if dockerfile.count(before)!=1:
+        raise RuntimeError('Unexpected BRRR Dockerfile prebuild command')
+    # Keep the source and flags intact; only serialize compilation on cache misses.
+    after='RUN --network=none '+json.dumps(['/usr/bin/env','MAX_JOBS=1',
+        '/opt/venv/bin/lil-runtime-bootstrap','/opt/venv/bin/python','-c',
+        'from brrr import cuext; tuple(map(cuext.extension, cuext.SOURCES))'])
+    return dockerfile.replace(before,after,1)
 
 
 def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--verify-source',action='store_true',help='Use an already downloaded source tree')
     args=parser.parse_args()
+    if available_memory()<8*GIB:
+        raise RuntimeError('Build requires at least 8 GiB available RAM; build before starting the RAM model')
     source=ROOT/'.build/upstream'
     manifest=fetch('source',source,args.verify_source)
     environment={**os.environ,'DOCKER_BUILDKIT':'1'}
@@ -26,6 +39,8 @@ def main():
             target=context/item['file']
             target.parent.mkdir(parents=True,exist_ok=True)
             shutil.copyfile(source/item['file'],target)
+        dockerfile=context/'Dockerfile'
+        dockerfile.write_text(serialize_prebuild(dockerfile.read_text()))
         run(['docker','build','--build-arg','BASE_IMAGE='+PINS['base_image'],
             '--build-arg','UV_IMAGE='+PINS['uv_image'],
             '-t',PINS['upstream_tag'],str(context)],env=environment)
@@ -38,15 +53,17 @@ def main():
     layers=upstream['RootFS']['Layers']
     if image['RootFS']['Layers'][:len(layers)]!=layers:
         raise RuntimeError('Hybrid image is not based on the verified upstream build')
-    actual=subprocess.check_output(['docker','run','--rm','--entrypoint','sha256sum',image['Id'],
-        '/opt/venv/lib/python3.12/site-packages/brrr/decoder.py'],text=True).split()[0]
-    if actual!=PINS['hybrid_decoder_sha256']:raise RuntimeError('Image decoder verification failed')
+    sums=subprocess.check_output(['docker','run','--rm','--network','none','--entrypoint',
+        'sha256sum',image['Id'],*RUNTIME_FILE_SHA256],text=True)
+    actual={path:checksum for checksum,path in (line.split(maxsplit=1) for line in sums.splitlines())}
+    if actual!=RUNTIME_FILE_SHA256:raise RuntimeError('Image runtime source verification failed')
     STATE.mkdir(exist_ok=True)
     receipt={'image_id':image['Id'],'image_tag':PINS['hybrid_tag'],'upstream_image_id':upstream['Id'],
         'base_image':PINS['base_image'],'brrr_revision':PINS['brrr_revision'],
-        'decoder_sha256':actual,'patch_sha256':digest(ROOT/'patches/hybrid-dispatch.patch')}
+        'runtime_file_sha256':actual,'patch_sha256':{
+            path.name:digest(path) for path in sorted((ROOT/'patches').glob('*.patch'))}}
     (STATE/'build.json').write_text(json.dumps(receipt,indent=2)+'\n')
-    print('Built and verified the hybrid. Local build receipt:',STATE/'build.json')
+    print('Built and verified the RAM-Engram hybrid. Local build receipt:',STATE/'build.json')
 
 
 if __name__=='__main__':main()
