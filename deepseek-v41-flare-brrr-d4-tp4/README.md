@@ -5,12 +5,6 @@ Blackwell Workstation Edition 96 GB cards. It prepares a local package with
 BRRR small-batch fusion, four draft tokens and RAM-resident Engrams. The
 [vLLM BRRR/B12X recipe](../deepseek-v41-brrr-b12x-hybrid-tp4/) remains independent.
 
-The patch enables the fused path for eligible TP4 verification graphs with
-5–8 physical rows, BF16 activations and native expert scales on SM120. Prefill,
-drafting and wider verification graphs retain Flare's existing path. The
-checkpoint files and serving binary are not modified; the preparation code
-exports the changed graphs into a new signed package.
-
 ## Requirements
 
 - Linux x86-64, Docker with BuildKit and Compose v2, NVIDIA Container Toolkit
@@ -89,11 +83,84 @@ curl --fail "http://127.0.0.1:$HOST_PORT/v1/models"
 The served ID is `DeepSeek-4.1-Flash-1017-BRRR`. To stop this recipe's container,
 use `docker stop deepseek-v41-flare-brrr-d4-serve`.
 
+## Comparison With Flare And BRRR
+
+### Kernels And Deployment
+
+**Versus stock Flare:** The [published gb202 package](https://huggingface.co/local-inference-lab/DeepSeek-V4.1-Flash-1017-FLARE/blob/32385269008081f7870cb04291d269d1bbee0788/README.md)
+ships with native Flare/b12x graphs prepared at `78b18b1c` and seven learned
+draft tokens (D7). This recipe starts from the same native checkpoint but
+exports and signs its own four-draft (D4) package. The packed stock package
+supports its captured depth or no drafting; setting `--mtp-draft-tokens 4`
+on that package is not a substitute for exporting D4. The locally exported
+unfused D4 control used the same head precisions and serving settings as this
+recipe, but without the BRRR kernel port.
+
+**What the port fuses:** Only eligible target-model verification graphs with
+**5-8 physical token rows** use BRRR. The gate requires TP4, SM120, BF16
+activations and native expert scales, not compressed CSF scales. The persistent
+suffix combines the grouped attention output projection, TP reductions,
+hyperconnections, router, and shared and routed expert work. On compatible
+layers with carried state and no Engram lookup, the fused prologue also handles
+the input hyperconnection and Q/KV projections. Flare still handles rotary
+transforms, indexed attention and KV cache updates. Prefill, draft computation,
+and verification shapes outside the gate stay on Flare/b12x. Isolated 2- and
+4-row trials regressed with fusion, so those shapes were left alone. A physical
+row is a row of the captured verification tensor, which can include pending
+inputs, draft candidates and padding; **5-8 rows does not mean 5-8 requests**.
+
+**Versus vLLM BRRR:** The [original BRRR launcher](https://huggingface.co/fraserprice/DeepSeek-4.1-Flash-1017-BRRR)
+mounts the native checkpoint directly and adds vLLM-side decode hooks, including
+its own sparse attention and indexer kernels. It defaults to SSD Engrams,
+16 sequences, DSpark depth 7 and a CUDA graph capture ceiling of 128. The
+original fused suffix supports up to 128 eligible decode rows, with a fused
+prologue for up to eight. The [vLLM BRRR/B12X hybrid](../deepseek-v41-brrr-b12x-hybrid-tp4/)
+keeps that integration but sets `BRRR_FUSED_MAX_ROWS=8`, so larger scheduled
+decode batches use the inherited B12X layer path instead of the fused decoder.
+This recipe borrows the BRRR prologue and suffix, not the vLLM
+hooks, BRRR attention kernels or DSpark scheduler. The choice is made during
+Ignition export and saved in the prepared graphs. The Flare serving binary
+and checkpoint files are unchanged; no Python callbacks or recompilation are
+needed for requests. The fused activation arithmetic is not bit-identical to
+Flare's unfused path.
+
+### Launch Settings
+
+| Setting | Published Flare D7 example | Unfused Flare D4 control and this recipe | vLLM BRRR/B12X hybrid |
+| --- | --- | --- | --- |
+| Drafting and verification | D7, adaptive, alpha 0.6, up to 128 packed rows | D4, adaptive, alpha 0.6, up to 128 packed rows | DSpark **4 / 3 / 2** at active decode batches **1 / 2-4 / 5-32**; probabilistic drafting, block rejection, adaptive verification off |
+| Scheduling | Balanced, 32 active requests, 4,096-token prefill chunks | Balanced, 32 active requests, 4,096-token prefill chunks | Async, 32 sequences, 4,096 batched tokens per step |
+| CUDA graphs | Prebuilt packed catalog | Locally exported packed catalog, speculative graph budget 64, four image slots | Breakable full and piecewise graphs, capture ceiling 256 |
+| Engrams and prefix cache | Disk-backed Engrams, 64 GiB host prefix cache in the example | `--embedding-table-storage ram`, `--prefix-cache-memory 0`; GPU prefix cache remains enabled | Locked host RAM via the hybrid's row reader, inherited vLLM prefix caching |
+| Shared GPU KV | `--kv-cache-limit memory` | `--kv-cache-limit memory`; **16,485,888 unfused** vs **14,957,568 fused** tokens observed | FP8 GPU-only KV, `--gpu-memory-utilization 0.96`; **7,832,679** tokens in the linked recipe's run |
+
+The Flare launcher's `--mtp-max-verification-token-budget 128` limits packed
+rows across requests, including pending inputs. Adaptive verification chooses
+which draft prefixes to verify within that limit; it is not the hybrid's
+batch-size-based draft schedule. The Flare export retains BF16 MLA compute, an
+NVFP4 draft head and an FP8 Markov head. These are not runtime overrides for a
+prebuilt package. See the [Flare option reference](https://docker.local-inference-lab.ai/flare/options)
+for what can be changed at launch.
+
+The fused export's additional packed layouts and scratch consume GPU memory.
+Its observed KV pool is about **9.3% smaller** than the unfused D4 control's
+and about **1.9x** the vLLM hybrid's published pool. All three figures are
+shared token capacities, not per-request limits or throughput comparisons.
+
 ## Measured Results
 
-November 7, 2026, on four 96 GB workstation cards at 395 W per card. The runtime
-reported **14,957,568 shared KV tokens** and a 1,048,576-token per-request
-context limit. The shared pool is not a million tokens for every active stream.
+November 7, 2026, using the fused Flare D4 profile. The runtime reported
+**14,957,568 shared KV tokens** and a 1,048,576-token per-request context limit.
+The shared pool is not a million tokens for every active stream.
+
+| Component | Benchmark configuration |
+| --- | --- |
+| GPUs | 4x NVIDIA RTX PRO 6000 Blackwell Workstation Edition, 96 GB each, TP4 on one host |
+| Power | 395 W configured limit per GPU, not measured draw; benchmark did not record clock offsets |
+| Interconnect | PCIe 5.0 x16, no NVLink; all four GPUs on one NUMA node. Driver reported read/write peer access for all 12 directed GPU pairs |
+| CPU and RAM | AMD Ryzen Threadripper PRO 7965WX, 24 cores / 48 threads, about 251 GiB Linux-visible RAM |
+| Storage | Local NVMe RAID 0 (ext4) for checkpoint and package; live Engram lookups use host RAM |
+| System | Ubuntu 24.04 LTS, NVIDIA driver 615.71.09 |
 
 Aggregate decode tok/s, measured in 30-second sustained windows. **C1 is
 mean ± sample SD over ten clean windows per context**; other columns are
