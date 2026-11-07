@@ -188,6 +188,20 @@ not establish model-quality equivalence or validate million-token requests.
 The publication scripts reproduce the pinned settings, but a rebuild may
 select different collective profiles or have different performance.
 
+### Correctness At C30
+
+On November 7, 2026, the same fused D4 deployment ran one measured wave of 30
+requests per profile with `--reasoning-effort max` and server-default sampling.
+
+| Profile | Score | Peak active requests |
+| --- | ---: | ---: |
+| Estonia 30 | **30/30 passed** | 30 |
+| LAVD 30 | **30/30 exact** | 30 |
+
+Flare metrics confirmed 30 simultaneous requests in both waves, with no
+queueing or competing traffic. All measured requests completed without errors,
+timeouts, or truncation. Estonia used one unscored prefill scout; LAVD did not.
+
 ## Reproduce the benchmark
 
 Use a quiet endpoint with no competing traffic. This takes about 70 minutes
