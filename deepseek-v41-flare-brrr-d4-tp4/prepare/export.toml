@@ -1,0 +1,14 @@
+[preparation]
+compile_workers = 4
+autotune_effort = "default"
+collective_tuning = "runtime"
+
+[memory]
+reserve = "0"
+
+[paths]
+hub_cache = "/work/hub"
+kernel_cache = "/work/kernels"
+package_cache = "/work/packages"
+export_staging = "/work/export-staging"
+cuda = "/usr/local/cuda"

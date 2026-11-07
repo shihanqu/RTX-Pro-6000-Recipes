@@ -1,0 +1,81 @@
+name: deepseek-v41-flare-brrr-d4
+services:
+  serve:
+    image: ghcr.io/local-inference-lab/flare@sha256:e2f83d5a06383bf8bde5e2cf4f69c13f077b1319f2b78b1786efcad2fbb1a21a
+    container_name: deepseek-v41-flare-brrr-d4-serve
+    init: true
+    restart: "no"
+    user: "${HOST_UID:?Run launch.sh}:${HOST_GID:?Run launch.sh}"
+    mem_limit: 216g
+    memswap_limit: 216g
+    security_opt:
+      - seccomp=unconfined
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    environment:
+      HOME: /state
+      CUDA_VISIBLE_DEVICES: "${GPU_IDS:?Select four GPU UUIDs}"
+    ports:
+      - "127.0.0.1:${HOST_PORT:-1230}:1230"
+    command:
+      - run
+      - /model/model.safetensors
+      - --gpus
+      - "0,1,2,3"
+      - --max-concurrency
+      - "32"
+      - --mtp-draft-tokens
+      - "4"
+      - --mtp-adaptive-verification
+      - --mtp-max-verification-token-budget
+      - "128"
+      - --mtp-adaptive-verification-alpha
+      - "0.6"
+      - --scheduler-policy
+      - balanced
+      - --embedding-table-storage
+      - ram
+      - --prefix-cache-memory
+      - "0"
+      - --kv-cache-limit
+      - memory
+      - --host
+      - 0.0.0.0
+      - --port
+      - "1230"
+      - --served-model-name
+      - DeepSeek-4.1-Flash-1017-BRRR
+      - --publisher-keys
+      - /publisher.json
+      - --dangerously-accept-publisher
+      - local-development
+      - --dangerously-approve-key
+      - "${PUBLISHER_FINGERPRINT:?Use the locally generated signer}"
+      - --verify-weights
+    volumes:
+      - type: bind
+        source: "${PACKAGE_DIR:?Select a local export}"
+        target: /model
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: "${PUBLISHER_PROFILE:?Use the locally generated publisher profile}"
+        target: /publisher.json
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: "${WORK_DIR:?Run launch.sh}/serve-state"
+        target: /state
+        bind:
+          create_host_path: false
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["${GPU0:?}", "${GPU1:?}", "${GPU2:?}", "${GPU3:?}"]
+              capabilities: [gpu]
