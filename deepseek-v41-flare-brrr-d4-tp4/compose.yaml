@@ -1,7 +1,7 @@
 name: deepseek-v41-flare-brrr-d4
 services:
   serve:
-    image: ghcr.io/local-inference-lab/flare@sha256:e2f83d5a06383bf8bde5e2cf4f69c13f077b1319f2b78b1786efcad2fbb1a21a
+    image: ghcr.io/local-inference-lab/flare@sha256:08742b9e683425a5f2e86c8c4668ea9bac0c9cf041aaa1f3df9a1916de638b52
     container_name: deepseek-v41-flare-brrr-d4-serve
     init: true
     restart: "no"

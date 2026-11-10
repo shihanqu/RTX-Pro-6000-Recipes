@@ -43,13 +43,23 @@ a local copy, set `MODEL_DIR` to its absolute path and run
 `python3 tools/checkpoint.py "$MODEL_DIR"` instead of downloading. Export
 checks sizes again and mounts the checkpoint read-only into the offline cache.
 
-The build fetches [Flare at `18b16e1`](https://github.com/NVIDIA/spark-local-inference/commit/18b16e170bb9eab03e2b1800107c72966c56594f),
-applies [the preparation patch](patches/flare-brrr-d4.patch), and uses its
-locked preparation dependencies, including FlashInfer `e977747a`, Torch
-`2.14.1+cu132` and the pinned CUDA 13.2.1 development image. Export uses native
-expert scales, BF16 MLA compute, the NVFP4 draft head, FP8 Markov head, 4,096-token
-prefill chunks, 32 request slots and 128 packed verification rows. Its runtime
-collective ladder comes from the pinned Flare tree.
+The build fetches [Flare at `972e28e`](https://github.com/NVIDIA/hyperflare-inference/commit/972e28e44781d8d0c84d70ae434db92c36076a43),
+applies [the BRRR preparation patch](patches/flare-brrr-d4.patch), and uses its
+locked dependencies, including Torch `2.14.1+cu132`, FlashInfer `1f8ed8a3`, and
+the pinned CUDA 13.2.1 development image. The FlashInfer pin masks unused KV
+operands. The [expert-reuse workload patch](patches/flashinfer-route-reuse.patch)
+adds whole-batch shared-expert cases to b12x autotuning without changing
+inference routing or the checkpoint. The build verifies the workload module's
+Git blob before and after patching. Flare shares startup-tuning storage across
+the prepared graphs. The preparation image applies Flare's bundled PyTorch
+and Triton fixes during the build so export can run as the host user.
+
+Export uses native expert scales, BF16 MLA compute, the NVFP4 draft head, FP8
+Markov head, 4,096-token prefill chunks, 32 request slots and 128 packed
+verification rows. Its runtime collective ladder comes from the pinned Flare
+tree. The attention and tuning changes are captured at export, so changing the
+serving image alone does not reproduce the results below. Use a separate
+`WORK_DIR` when upgrading so the previous package and runtime remain available.
 
 Ignition writes the package below `$WORK_DIR/packages/models/` and generates
 a local development signer in `$WORK_DIR/settings/`. Keep the private
@@ -119,10 +129,10 @@ keeps that integration but sets `BRRR_FUSED_MAX_ROWS=8`, so larger scheduled
 decode batches use the inherited B12X layer path instead of the fused decoder.
 This recipe borrows the BRRR prologue and suffix, not the vLLM
 hooks, BRRR attention kernels or DSpark scheduler. The choice is made during
-Ignition export and saved in the prepared graphs. The Flare serving binary
-and checkpoint files are unchanged; no Python callbacks or recompilation are
-needed for requests. The fused activation arithmetic is not bit-identical to
-Flare's unfused path.
+Ignition export and saved in the prepared graphs. The recipe does not modify
+the pinned serving binary or checkpoint files. Requests require no Python
+callbacks or recompilation. The fused activation arithmetic is not bit-identical
+to Flare's unfused path.
 
 ### Launch Settings
 
@@ -132,7 +142,7 @@ Flare's unfused path.
 | Scheduling | Balanced, 32 active requests, 4,096-token prefill chunks | Balanced, 32 active requests, 4,096-token prefill chunks | Async, 32 sequences, 4,096 batched tokens per step |
 | CUDA graphs | Prebuilt packed catalog | Locally exported packed catalog, speculative graph budget 64, four image slots | Breakable full and piecewise graphs, capture ceiling 256 |
 | Engrams and prefix cache | Disk-backed Engrams, 64 GiB host prefix cache in the example | `--embedding-table-storage ram`, `--prefix-cache-memory 0`; GPU prefix cache remains enabled | Locked host RAM via the hybrid's row reader, inherited vLLM prefix caching |
-| Shared GPU KV | `--kv-cache-limit memory` | `--kv-cache-limit memory`; **16,485,888 unfused** vs **14,957,568 fused** tokens observed | FP8 GPU-only KV, `--gpu-memory-utilization 0.96`; **7,832,679** tokens in the linked recipe's run |
+| Shared GPU KV | `--kv-cache-limit memory` | `--kv-cache-limit memory`; **16,464,000 fused** tokens observed | FP8 GPU-only KV, `--gpu-memory-utilization 0.96`; **7,832,679** tokens in the linked recipe's run |
 
 The Flare launcher's `--mtp-max-verification-token-budget 128` limits packed
 rows across requests, including pending inputs. Adaptive verification chooses
@@ -142,15 +152,16 @@ NVFP4 draft head and an FP8 Markov head. These are not runtime overrides for a
 prebuilt package. See the [Flare option reference](https://docker.local-inference-lab.ai/flare/options)
 for what can be changed at launch.
 
-The fused export's additional packed layouts and scratch consume GPU memory.
-Its observed KV pool is about **9.3% smaller** than the unfused D4 control's
-and about **1.9x** the vLLM hybrid's published pool. All three figures are
-shared token capacities, not per-request limits or throughput comparisons.
+The November 9 fused export had **10.1% more shared KV** than the November 7
+fused export (14,957,568 tokens). It nearly matches the earlier unfused D4
+control's 16,485,888 tokens and is about **2.1x** the vLLM hybrid's published
+pool. These are shared capacities, not per-request limits or throughput
+comparisons. The comparison does not isolate a single preparation change.
 
 ## Measured Results
 
-November 7, 2026, using the fused Flare D4 profile. The runtime reported
-**14,957,568 shared KV tokens** and a 1,048,576-token per-request context limit.
+November 9, 2026, using the rebuilt `972e28e` Flare BRRR D4 package. The runtime
+reported **16,464,000 shared KV tokens** and a 1,048,576-token per-request limit.
 The shared pool is not a million tokens for every active stream.
 
 | Component | Benchmark configuration |
@@ -168,49 +179,49 @@ single measurements.
 
 | Context | C1 mean ± SD | C2 | C4 | C8 | C16 | C32 |
 |---|---:|---:|---:|---:|---:|---:|
-| 0K | 363.67 ± 11.16 | 571.27 | 851.07 | 1,143.46 | 1,472.03 | 2,262.96 |
-| 16K | 354.91 ± 9.69 | 573.72 | 820.78 | 1,124.26 | 1,495.02 | 2,242.34 |
-| 32K | 354.13 ± 16.58 | 573.05 | 835.47 | 1,114.92 | 1,443.53 | 2,238.38 |
-| 64K | 348.22 ± 7.94 | 560.14 | 797.61 | 1,114.54 | 1,445.17 | 2,181.72 |
-| 128K | 345.34 ± 9.60 | 554.95 | 777.37 | 1,089.92 | 1,430.73 | 2,115.71 |
-| 256K | 329.78 ± 6.93 | 513.36 | 759.15 | 1,076.40 | 1,342.51 | 2,000.30 |
+| 0K | 357.33 ± 17.03 | 604.46 | 823.84 | 1,119.47 | 1,635.63 | 2,222.72 |
+| 16K | 352.65 ± 13.85 | 575.01 | 794.09 | 1,112.62 | 1,617.16 | 2,222.51 |
+| 32K | 354.65 ± 13.79 | 594.95 | 786.61 | 1,110.62 | 1,637.72 | 2,194.78 |
+| 64K | 351.33 ± 14.55 | 581.17 | 814.40 | 1,106.96 | 1,544.00 | 2,192.39 |
+| 128K | 337.50 ± 8.47 | 560.36 | 774.85 | 1,080.25 | 1,561.74 | 2,093.67 |
+| 256K | 330.14 ± 10.41 | 530.17 | 778.83 | 1,053.76 | 1,518.02 | 2,088.08 |
 
-All 36 full-matrix cells sustained the requested active request count with
-no queueing. At nominal 256K/C32, measured input averaged 256,882 tokens per
-stream. One additional C1 pass replaced a 64K repetition-guard failure. The
-first ten valid windows per context are included without speed-based trimming.
-The [numeric results](results/2026-11-07.json) include the individual C1 rates
-and prefill scouts. Prefill scouts stop at 128K in this client; the 256K decode
-cells were measured.
+Compared with the [November 7 results](results/2026-11-07.json), C16 was
+**6.8% to 13.5% faster** across these contexts, C1 means stayed within 2.3%,
+and 256K/C32 was 4.4% faster. This is a package comparison on the tested host,
+not a claim of higher throughput at every concurrency.
 
-These measurements are from the original local export of this profile. They do
-not establish model-quality equivalence or validate million-token requests.
-The publication scripts reproduce the pinned settings, but a rebuild may
-select different collective profiles or have different performance.
+All 36 matrix cells validated after rerunning 128K/C8, whose initial window
+had an extra active request. Four C1 windows were rejected: two for extra
+active requests and two for repetition. Statistics use the first ten valid
+C1 windows per context in chronological order, without speed-based trimming.
+The endpoint remained healthy and the deployment did not change.
 
-### Correctness At C30
+The [November 9 numeric results](results/2026-11-09.json) include individual C1
+rates, per-cell native token rates, rejection reasons, and prefill scouts
+through 128K. At nominal 256K/C32, measured input averaged 256,882 tokens per
+stream. The measurements do not establish model-quality equivalence or validate
+million-token requests. Rebuilding the pinned recipe may select different
+kernel or collective profiles and yield different rates.
 
-On November 7, 2026, the same fused D4 deployment ran one measured wave of 30
-requests per profile with `--reasoning-effort max` and server-default sampling.
+### Correctness
 
-| Profile | Score | Peak active requests |
-| --- | ---: | ---: |
-| Estonia 30 | **30/30 passed** | 30 |
-| LAVD 30 | **30/30 exact** | 30 |
-
-Flare metrics confirmed 30 simultaneous requests in both waves, with no
-queueing or competing traffic. All measured requests completed without errors,
-timeouts, or truncation. Estonia used one unscored prefill scout; LAVD did not.
+The November 9 package passed Estonia 10/10 separately at C1, C2 and C10,
+four concurrent vision cases, JSON schema, tool-call round trips and request
+transitions. The [Estonia 30 and LAVD 30 record](https://github.com/shihanqu/RTX-Pro-6000-Recipes/blob/1d9e854980e02ca07116b6632b869df9bc702410/deepseek-v41-flare-brrr-d4-tp4/README.md#correctness-at-c30)
+applies to the November 7 package; C30 correctness was not rerun for this build.
 
 ## Reproduce the benchmark
 
-Use a quiet endpoint with no competing traffic. This takes about 70 minutes
+Use a quiet endpoint with no competing traffic. Allow about 80 minutes
 on the tested setup. The runner verifies and uses the pinned
 [LLM Inference Bench v0.8.0](https://github.com/local-inference-lab/llm-inference-bench/tree/52216d70865a015b34689626d04a80b89c9dc45f)
 client with native Flare metrics. It runs the full matrix once, then C1-only
 repeats, using the 8,192-token output cap, a three-second decode warmup,
 default sampling and the repetition guard. Invalid windows remain in the raw
-logs; only clean windows count toward the C1 statistics.
+logs; only clean windows count toward the C1 statistics. A flagged higher-
+concurrency cell makes the runner exit with status 2. Rerun that cell on the
+same quiet endpoint with the pinned client and unchanged measurement settings.
 
 ```bash
 python3 -m venv "$WORK_DIR/bench-venv"

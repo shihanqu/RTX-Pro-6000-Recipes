@@ -17,3 +17,19 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
 WORKDIR /src
 COPY . .
 RUN uv sync --locked --extra prepare --extra test --python /usr/bin/python3.12
+
+# Keep the pinned attention kernels; extend only the MoE tuning workloads.
+RUN set -eu; \
+    cd /opt/flare-venv/lib/python3.12/site-packages; \
+    file=flashinfer/experimental/b12x/moe/fused_moe/workloads.py; \
+    test "$(git hash-object "$file")" = 64e5be756829cff3cc8a7ec72377309d69cab327; \
+    git apply --check /src/flashinfer-route-reuse.patch; \
+    git apply /src/flashinfer-route-reuse.patch; \
+    test "$(git hash-object "$file")" = f0288ee4cf4b7625b52c1e305170e38c54e1d3c7
+
+# Export runs as the host UID, which cannot change the installed environment.
+RUN /opt/flare-venv/bin/python -m ignition.patches
+
+LABEL org.opencontainers.image.revision="972e28e44781d8d0c84d70ae434db92c36076a43" \
+    local.flashinfer.revision="1f8ed8a3c46e27d03cff54e08f23e9bc50476d57" \
+    local.flashinfer.workloads="e16f949554f4efe8ee4154165231633e1cad8c05"
