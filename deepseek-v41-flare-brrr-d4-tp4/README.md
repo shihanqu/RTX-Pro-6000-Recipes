@@ -158,6 +158,9 @@ control's 16,485,888 tokens and is about **2.1x** the vLLM hybrid's published
 pool. These are shared capacities, not per-request limits or throughput
 comparisons. The comparison does not isolate a single preparation change.
 
+See the [BRRR D7 experiment](D7-EXPERIMENT.md) for the same-power comparison
+with a separate seven-draft export and why D4 stayed the default.
+
 ## Measured Results
 
 The November 9 (395 W) and November 10 (450 W) tests used the same running
