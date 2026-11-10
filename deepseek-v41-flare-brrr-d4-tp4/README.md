@@ -160,22 +160,26 @@ comparisons. The comparison does not isolate a single preparation change.
 
 ## Measured Results
 
-November 9, 2026, using the rebuilt `972e28e` Flare BRRR D4 package. The runtime
-reported **16,464,000 shared KV tokens** and a 1,048,576-token per-request limit.
-The shared pool is not a million tokens for every active stream.
+The November 9 (395 W) and November 10 (450 W) tests used the same running
+`972e28e` Flare BRRR D4 deployment and launch settings. Both runs reported
+**16,464,000 shared KV tokens** and a 1,048,576-token per-request limit. The
+shared pool is not a million tokens for every active stream.
 
 | Component | Benchmark configuration |
 | --- | --- |
 | GPUs | 4x NVIDIA RTX PRO 6000 Blackwell Workstation Edition, 96 GB each, TP4 on one host |
-| Power | 395 W configured limit per GPU, not measured draw; benchmark did not record clock offsets |
+| Power | 395 W or 450 W configured limit per GPU, not measured draw. All 188 power checks in the 450 W run matched that limit on all four serving cards. |
 | Interconnect | PCIe 5.0 x16, no NVLink; all four GPUs on one NUMA node. Driver reported read/write peer access for all 12 directed GPU pairs |
 | CPU and RAM | AMD Ryzen Threadripper PRO 7965WX, 24 cores / 48 threads, about 251 GiB Linux-visible RAM |
 | Storage | Local NVMe RAID 0 (ext4) for checkpoint and package; live Engram lookups use host RAM |
 | System | Ubuntu 24.04 LTS, NVIDIA driver 615.71.09 |
 
 Aggregate decode tok/s, measured in 30-second sustained windows. **C1 is
-mean ± sample SD over ten clean windows per context**; other columns are
-single measurements.
+mean ± sample SD over the first ten valid windows per context**, selected in
+chronological order without speed-based trimming. C2 through C32 are single
+valid windows.
+
+### 395 W Per GPU
 
 | Context | C1 mean ± SD | C2 | C4 | C8 | C16 | C32 |
 |---|---:|---:|---:|---:|---:|---:|
@@ -186,23 +190,59 @@ single measurements.
 | 128K | 337.50 ± 8.47 | 560.36 | 774.85 | 1,080.25 | 1,561.74 | 2,093.67 |
 | 256K | 330.14 ± 10.41 | 530.17 | 778.83 | 1,053.76 | 1,518.02 | 2,088.08 |
 
-Compared with the [November 7 results](results/2026-11-07.json), C16 was
+At 395 W, compared with the [November 7 results](results/2026-11-07.json), C16 was
 **6.8% to 13.5% faster** across these contexts, C1 means stayed within 2.3%,
 and 256K/C32 was 4.4% faster. This is a package comparison on the tested host,
 not a claim of higher throughput at every concurrency.
 
-All 36 matrix cells validated after rerunning 128K/C8, whose initial window
-had an extra active request. Four C1 windows were rejected: two for extra
-active requests and two for repetition. Statistics use the first ten valid
-C1 windows per context in chronological order, without speed-based trimming.
-The endpoint remained healthy and the deployment did not change.
+All 36 cells in the [395 W results](results/2026-11-09.json) validated after
+rerunning 128K/C8, whose initial window had an extra active request. Four C1
+windows were rejected: two for extra active requests and two for repetition.
 
-The [November 9 numeric results](results/2026-11-09.json) include individual C1
-rates, per-cell native token rates, rejection reasons, and prefill scouts
-through 128K. At nominal 256K/C32, measured input averaged 256,882 tokens per
-stream. The measurements do not establish model-quality equivalence or validate
-million-token requests. Rebuilding the pinned recipe may select different
-kernel or collective profiles and yield different rates.
+### 450 W Per GPU
+
+| Context | C1 mean ± SD | C2 | C4 | C8 | C16 | C32 |
+|---|---:|---:|---:|---:|---:|---:|
+| 0K | 364.45 ± 21.30 | 632.32 | 842.44 | 1,145.03 | 1,680.14 | 2,266.83 |
+| 16K | 358.31 ± 16.10 | 620.17 | 856.66 | 1,146.24 | 1,616.45 | 2,250.69 |
+| 32K | 354.68 ± 14.35 | 569.32 | 815.44 | 1,118.26 | 1,572.19 | 2,239.50 |
+| 64K | 351.33 ± 6.96 | 595.65 | 830.11 | 1,128.23 | 1,583.15 | 2,252.78 |
+| 128K | 344.80 ± 19.02 | 563.50 | 811.13 | 1,090.78 | 1,562.54 | 2,136.42 |
+| 256K | 334.91 ± 6.37 | 523.24 | 775.70 | 1,098.84 | 1,545.01 | 2,092.67 |
+
+All 36 cells in the [450 W results](results/2026-11-10-450w.json) validated.
+The initial 0K/C1 window was rejected and replaced because two requests were
+briefly active. The endpoint remained healthy and the deployment did not change.
+
+Compared with 395 W, **C32 was 0.2% to 2.8% faster** across the six contexts and
+C1 means stayed within 2.2%. The largest observed prefill difference was the
+single 128K scout: **20.6K versus 18.9K tok/s (+8.8%)**. These are observed
+differences, not evidence of a gain at every concurrency or a power-efficiency
+comparison.
+
+Both numeric reports include individual C1 rates, per-cell native token rates,
+rejection reasons and prefill scouts through 128K. At nominal 256K/C32, the
+395 W input averaged 256,882 tokens per stream. The measurements do not establish
+model-quality equivalence or validate million-token requests. Rebuilding the
+pinned recipe may select different kernel or collective profiles and yield
+different rates.
+
+### Tetris Generation At 450 W
+
+The [Tetris runner](https://www.voipmonitor.org/tetristest.py) made three
+isolated requests. End-to-end throughput includes reasoning and averaged
+**540.04 ± 3.01 tok/s** (mean ± sample SD across all three requests). This is a
+separate workload, not a sustained-decode rate. No matched 395 W Tetris result
+is reported.
+
+| Run | Completion tokens | Elapsed | End-to-end tok/s | Desktop check |
+| --- | ---: | ---: | ---: | --- |
+| 1 | 46,168 | 85.0 s | 543.39 | Passed |
+| 2 | 40,628 | 75.6 s | 537.56 | Passed |
+| 3 | 45,639 | 84.6 s | 539.16 | Canvas color error after starting |
+
+The games were checked without modifying the generated HTML. Two of three
+passed the desktop browser check. The generated HTML is not published here.
 
 ### Correctness
 
@@ -213,8 +253,10 @@ applies to the November 7 package; C30 correctness was not rerun for this build.
 
 ## Reproduce the benchmark
 
-Use a quiet endpoint with no competing traffic. Allow about 80 minutes
-on the tested setup. The runner verifies and uses the pinned
+Use a quiet endpoint with no competing traffic. Run each power setting
+separately and verify the configured limits; this recipe does not set power
+limits. Allow about 80 minutes per run on the tested setup. The runner verifies
+and uses the pinned
 [LLM Inference Bench v0.8.0](https://github.com/local-inference-lab/llm-inference-bench/tree/52216d70865a015b34689626d04a80b89c9dc45f)
 client with native Flare metrics. It runs the full matrix once, then C1-only
 repeats, using the 8,192-token output cap, a three-second decode warmup,
