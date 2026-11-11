@@ -160,6 +160,8 @@ comparisons. The comparison does not isolate a single preparation change.
 
 See the [BRRR D7 experiment](D7-EXPERIMENT.md) for the same-power comparison
 with a separate seven-draft export and why D4 stayed the default.
+The [stock Flare experiment](STOCK-FLARE-EXPERIMENT.md) compares stock D7,
+fused D7, and fused D4 at 450 W per GPU.
 
 ## Measured Results
 
