@@ -29,6 +29,8 @@ At C1, mean (sample SD) was 381.93 (10.31) versus 337.78 (6.90) at 0K and 381.59
 | Native checkpoint integrity | All 88 files checked against the pinned upstream revision, including the index for all 48 weight shards |
 | Exported weights | 12/12 sampled files (layers 4, 20, 36 on every TP rank) matched the publisher's WARMIND package byte for byte. This is a sample, not a whole-export equivalence claim. |
 
+As a separate reproduction check, the public test commands passed the structured-output, C32 arithmetic, vision and Estonia gates against the running D4 deployment. A fresh audited 0K/C1 window measured **379.16 tok/s**; four windows with additional traffic were excluded. This spot check is not included in the 64-window table above.
+
 ## Requirements
 
 - Linux x86-64, Docker Engine with Compose v2, NVIDIA Container Toolkit, Git, Python 3.12, Hugging Face CLI (`hf`; tested with `huggingface_hub==1.6.0`), and four idle RTX PRO 6000 Blackwell **Workstation** 96 GB cards. Reference: driver 615.71.09, PCIe Gen5 x16 with peer access. Use `nvidia-smi topo -m` to inspect your own layout; rank order matters.

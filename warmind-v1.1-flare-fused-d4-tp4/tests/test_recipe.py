@@ -4,8 +4,10 @@ import base64
 import hashlib
 import ipaddress
 import json
+import os
 import statistics
 import struct
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -19,7 +21,7 @@ import benchmark
 import validate
 
 import recipe
-from tools import catalog, checkpoint, delta
+from tools import catalog, checkpoint, delta, sources
 
 
 def sha(x):
@@ -253,6 +255,43 @@ class BenchmarkTests(unittest.TestCase):
 
 
 class GuardTests(unittest.TestCase):
+    def test_public_checkout_survives_private_workspace_umask(self):
+        with tempfile.TemporaryDirectory() as t:
+            root = Path(t).resolve()
+            repo, work = root / "upstream", root / "work"
+            repo.mkdir()
+            work.mkdir(mode=0o700)
+            git = ["git", "-C", str(repo)]
+            subprocess.run([*git, "init", "--quiet"], check=True)
+            (repo / "pkg").mkdir()
+            (repo / "pkg/module.py").write_text("VALUE = 1\n")
+            subprocess.run([*git, "add", "pkg/module.py"], check=True)
+            subprocess.run(
+                [
+                    *git,
+                    "-c",
+                    "user.name=fixture",
+                    "-c",
+                    "user.email=fixture",
+                    "-c",
+                    "commit.gpgsign=false",
+                    "commit",
+                    "--quiet",
+                    "-m",
+                    "fixture",
+                ],
+                check=True,
+            )
+            pin = subprocess.check_output([*git, "rev-parse", "HEAD"], text=True).strip()
+            old = os.umask(0o077)
+            try:
+                src = sources.fetch(work, "public-", str(repo), pin)
+            finally:
+                os.umask(old)
+            self.assertEqual((src / "pkg/module.py").stat().st_mode & 0o777, 0o644)
+            self.assertEqual((src / "pkg").stat().st_mode & 0o777, 0o755)
+            self.assertEqual(work.stat().st_mode & 0o777, 0o700)
+
     def test_workspace_refuses_broad_or_shared_destination(self):
         with tempfile.TemporaryDirectory() as t:
             root = Path(t).resolve()

@@ -27,7 +27,9 @@ def fetch(work, prefix, url, revision):
     subprocess.run([*git, "fetch", "--quiet", "--depth", "1", url, revision], check=True)
     if subprocess.check_output([*git, "rev-parse", "FETCH_HEAD"], text=True).strip() != revision:
         raise ValueError("Unexpected Git revision")
-    subprocess.run([*git, "switch", "--quiet", "--detach", revision], check=True)
+    # Docker COPY retains file modes. The patched public source must be readable by
+    # the non-root export user; the parent workspace and its keys stay private.
+    subprocess.run([*git, "switch", "--quiet", "--detach", revision], check=True, umask=0o022)
     return path
 
 
@@ -46,11 +48,14 @@ def prepare(recipe, work):
     src = fetch(work, "flare-source-", FLARE_REPO, FLARE_REV)
     patch = assets["patches/flare-brrr-d4.patch"]
     for options in (["--check"], []):
-        subprocess.run(["git", "-C", str(src), "apply", *options, "-"], input=patch, check=True)
+        subprocess.run(["git", "-C", str(src), "apply", *options, "-"], input=patch, check=True, umask=0o022)
     for source, dest in [
         ("prepare/Dockerfile", "Dockerfile.recipe"),
         ("prepare/Dockerfile.dockerignore", "Dockerfile.recipe.dockerignore"),
         ("patches/flashinfer-route-reuse.patch", "flashinfer-route-reuse.patch"),
     ]:
-        (src / dest).write_bytes(assets[source])
+        path = src / dest
+        path.write_bytes(assets[source])
+        path.chmod(0o644)
+    src.chmod(0o755)
     return src
