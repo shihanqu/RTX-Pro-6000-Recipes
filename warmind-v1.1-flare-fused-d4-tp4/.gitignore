@@ -1,0 +1,14 @@
+/work/
+/checkpoint/
+/runs/
+/.venv/
+/.env*
+__pycache__/
+*.pem
+*.key
+*.safetensors
+*.partial
+*.log
+*.jsonl
+*publisher*.json
+trust.toml

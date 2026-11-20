@@ -1,0 +1,534 @@
+{
+  "repository": "jcartu/WARMIND-1017",
+  "revision": "a6382f222da49b7109586eecbe1e53a10a4e0637",
+  "files": [
+    {
+      "file": ".gitattributes",
+      "bytes": 1594,
+      "algorithm": "git-blob-sha1",
+      "hash": "a8a050df998304d9f6ab196df1d56a6a6b0cb438"
+    },
+    {
+      "file": "CITATION.cff",
+      "bytes": 3784,
+      "algorithm": "git-blob-sha1",
+      "hash": "24d04c390f0fefd3ef644eba949bd62099ee750e"
+    },
+    {
+      "file": "DERIVATIVE.json",
+      "bytes": 60218,
+      "algorithm": "git-blob-sha1",
+      "hash": "9abe827c9ba141ef236d3048a1fc89cf8825d154"
+    },
+    {
+      "file": "EXPLAINER.md",
+      "bytes": 40349,
+      "algorithm": "git-blob-sha1",
+      "hash": "8383c2031ae98d54f06cd1c6aff3d78be7c6561d"
+    },
+    {
+      "file": "LICENSE",
+      "bytes": 1084,
+      "algorithm": "git-blob-sha1",
+      "hash": "d62e3bef9f054f21b7fc616365850fbf879a99ff"
+    },
+    {
+      "file": "README.md",
+      "bytes": 40443,
+      "algorithm": "git-blob-sha1",
+      "hash": "1572806372c4835993effa69b398c1dff9292846"
+    },
+    {
+      "file": "SHA256SUMS",
+      "bytes": 8280,
+      "algorithm": "git-blob-sha1",
+      "hash": "3410a0d7145685ed9a96e701689abaddfc460254"
+    },
+    {
+      "file": "abstain_directions.pt",
+      "bytes": 7379545,
+      "algorithm": "sha256",
+      "hash": "b0647da8f4d2d5c3fa7ec950d9f9f5f5f96dcf1ebedb96a242c491568787b3a7"
+    },
+    {
+      "file": "config.json",
+      "bytes": 3311,
+      "algorithm": "git-blob-sha1",
+      "hash": "09917a9139b22d5bf8be52132787f435147b1020"
+    },
+    {
+      "file": "encoding/README.md",
+      "bytes": 12164,
+      "algorithm": "git-blob-sha1",
+      "hash": "1d094a2c20234cf6c04bcd1b4627cc30f42297d5"
+    },
+    {
+      "file": "encoding/encoding.py",
+      "bytes": 37962,
+      "algorithm": "git-blob-sha1",
+      "hash": "3c7c357dc9ae3ed37adacb8572a2e9498b7d1bcb"
+    },
+    {
+      "file": "encoding/test_encoding.py",
+      "bytes": 22449,
+      "algorithm": "git-blob-sha1",
+      "hash": "63ea61ae6d35efba3e35c5a5a50b9ac077b2d469"
+    },
+    {
+      "file": "encoding/tests/test_input_1.json",
+      "bytes": 2761,
+      "algorithm": "git-blob-sha1",
+      "hash": "c7435727e24c5f7b5cf28b470cf03814101eb37a"
+    },
+    {
+      "file": "encoding/tests/test_input_2.json",
+      "bytes": 527,
+      "algorithm": "git-blob-sha1",
+      "hash": "132bb05a51e79204324f160cfde2880b5d0077ba"
+    },
+    {
+      "file": "encoding/tests/test_input_3.json",
+      "bytes": 2554,
+      "algorithm": "git-blob-sha1",
+      "hash": "6d2612113c71fb9a897255ec694b7b8a41d0432b"
+    },
+    {
+      "file": "encoding/tests/test_input_4.json",
+      "bytes": 712,
+      "algorithm": "git-blob-sha1",
+      "hash": "86cd1f0a68075a412654ea10f9558c69162b271a"
+    },
+    {
+      "file": "encoding/tests/test_input_5.json",
+      "bytes": 1143,
+      "algorithm": "git-blob-sha1",
+      "hash": "2a2fa6a89e8118e896ec47abcc5bda30789e6532"
+    },
+    {
+      "file": "encoding/tests/test_output_1.txt",
+      "bytes": 2476,
+      "algorithm": "git-blob-sha1",
+      "hash": "3dc9bfe936d251bf69f6db738d1302bfa8c4c705"
+    },
+    {
+      "file": "encoding/tests/test_output_2.txt",
+      "bytes": 294,
+      "algorithm": "git-blob-sha1",
+      "hash": "78eb6be5de6f3cda7c5065b3c3bd01bac28ef1dc"
+    },
+    {
+      "file": "encoding/tests/test_output_3.txt",
+      "bytes": 2481,
+      "algorithm": "git-blob-sha1",
+      "hash": "90b2b6b74beaa471dfbbba1d7e7a5eb88c9e7da0"
+    },
+    {
+      "file": "encoding/tests/test_output_4.txt",
+      "bytes": 574,
+      "algorithm": "git-blob-sha1",
+      "hash": "efad296eb4ff95754f322476db4d26e72682a586"
+    },
+    {
+      "file": "encoding/tests/test_output_5.txt",
+      "bytes": 408,
+      "algorithm": "git-blob-sha1",
+      "hash": "a130bcc2c5682c94b6fd5194def54209f1794939"
+    },
+    {
+      "file": "inference/README.md",
+      "bytes": 2029,
+      "algorithm": "git-blob-sha1",
+      "hash": "e0b1d6ddfb4ab06a0dc9b4542826e6d7aa07a77c"
+    },
+    {
+      "file": "inference/config.json",
+      "bytes": 1982,
+      "algorithm": "git-blob-sha1",
+      "hash": "7a915cc69e21abbc6d7fb939cef5d09c72aa0d24"
+    },
+    {
+      "file": "inference/convert.py",
+      "bytes": 9458,
+      "algorithm": "git-blob-sha1",
+      "hash": "61bd2943648920ce599c4c86dc9bf6316e152fe8"
+    },
+    {
+      "file": "inference/engram.py",
+      "bytes": 8138,
+      "algorithm": "git-blob-sha1",
+      "hash": "a36bc6c6b8cbf2d3dbac850863c23b55a7ecb5c7"
+    },
+    {
+      "file": "inference/examples/example.txt",
+      "bytes": 332,
+      "algorithm": "git-blob-sha1",
+      "hash": "9200d36c90f601c0648ee23279abbb29b2228f13"
+    },
+    {
+      "file": "inference/examples/example_harmony.json",
+      "bytes": 2156,
+      "algorithm": "git-blob-sha1",
+      "hash": "fae1c2608f8e5b980fcc9dc311cda8e345ecde1c"
+    },
+    {
+      "file": "inference/examples/images/carrots.jpeg",
+      "bytes": 212495,
+      "algorithm": "sha256",
+      "hash": "5df896a4a07e127281c60fc957f8b3d73f4735b3258a0bf762b4383557f8fa9a"
+    },
+    {
+      "file": "inference/examples/images/corn.jpeg",
+      "bytes": 56122,
+      "algorithm": "git-blob-sha1",
+      "hash": "5777d198b83de15eb21243f8aac49074922053fb"
+    },
+    {
+      "file": "inference/generate.py",
+      "bytes": 8722,
+      "algorithm": "git-blob-sha1",
+      "hash": "84d4873c4c59ea743e104920a77984f022bfb9f5"
+    },
+    {
+      "file": "inference/image_processor.py",
+      "bytes": 7699,
+      "algorithm": "git-blob-sha1",
+      "hash": "a50311ece615b72be2c9d4b649a05619c27681e7"
+    },
+    {
+      "file": "inference/kernel.py",
+      "bytes": 23790,
+      "algorithm": "git-blob-sha1",
+      "hash": "6fa7bd5aafbe1bc62887080963cc9fdd838d89f5"
+    },
+    {
+      "file": "inference/model.py",
+      "bytes": 61669,
+      "algorithm": "git-blob-sha1",
+      "hash": "46cc8310bb64852f3c36c9cc5dd13d47acabf6ee"
+    },
+    {
+      "file": "inference/requirements.txt",
+      "bytes": 98,
+      "algorithm": "git-blob-sha1",
+      "hash": "0ac24b86509757adc25e0d7518b16fffbf81a5b1"
+    },
+    {
+      "file": "inference/run.sh",
+      "bytes": 1759,
+      "algorithm": "git-blob-sha1",
+      "hash": "e2d52080a88d3053d963bac4bba75116ce73aed4"
+    },
+    {
+      "file": "inference/vision.py",
+      "bytes": 4457,
+      "algorithm": "git-blob-sha1",
+      "hash": "77af0bdef9f4649edebac2876cd1df50a147ce98"
+    },
+    {
+      "file": "model-00001-of-00048.safetensors",
+      "bytes": 970533624,
+      "algorithm": "sha256",
+      "hash": "13bd121075f0b68cb7e8e8021a1011d42a81a83f557a2602fd9c07d52fddb0ec"
+    },
+    {
+      "file": "model-00002-of-00048.safetensors",
+      "bytes": 1323858272,
+      "algorithm": "sha256",
+      "hash": "43616eebd88dd4f1f1b642772356fc160478d1d9d04edd240431e7d065d2eda7"
+    },
+    {
+      "file": "model-00003-of-00048.safetensors",
+      "bytes": 7389759032,
+      "algorithm": "sha256",
+      "hash": "41611994fc9b27829b757d72257570d65a976fe65b8c6df8641adcd139d65ded"
+    },
+    {
+      "file": "model-00004-of-00048.safetensors",
+      "bytes": 7389759032,
+      "algorithm": "sha256",
+      "hash": "e8e901b3cb1ab46f32729c7eaab37bd774a09094f0a02c51a60e883f779f2c39"
+    },
+    {
+      "file": "model-00005-of-00048.safetensors",
+      "bytes": 7405953784,
+      "algorithm": "sha256",
+      "hash": "c5df71c02d6a22bcb20a0dbbcda9c6b65aa104f44415102a9a6a03bee92bb9de"
+    },
+    {
+      "file": "model-00006-of-00048.safetensors",
+      "bytes": 7389759032,
+      "algorithm": "sha256",
+      "hash": "a5d42afde2aee33619fb7a674b4c737c38d1f1d47a636a26f3edfb3b54164167"
+    },
+    {
+      "file": "model-00007-of-00048.safetensors",
+      "bytes": 7389759032,
+      "algorithm": "sha256",
+      "hash": "387a0962d8eca4a4f44b3b89c1a17703ae145f58fb82021cfcf5baf9be9b7c1a"
+    },
+    {
+      "file": "model-00008-of-00048.safetensors",
+      "bytes": 7389759032,
+      "algorithm": "sha256",
+      "hash": "41739e8a5b60cffef9c0f598524745842583b824f63d4ada0beed26386d994bf"
+    },
+    {
+      "file": "model-00009-of-00048.safetensors",
+      "bytes": 7389759032,
+      "algorithm": "sha256",
+      "hash": "e8262c8abeafcc24025d597dd1577fbd5f55ae8586c3b82b8b61ddc1a9e68638"
+    },
+    {
+      "file": "model-00010-of-00048.safetensors",
+      "bytes": 7389759032,
+      "algorithm": "sha256",
+      "hash": "4cf87a1c5140fa0c877c42f9af2f7351e393ddb7080b62609f5f26625f101a22"
+    },
+    {
+      "file": "model-00011-of-00048.safetensors",
+      "bytes": 7405953784,
+      "algorithm": "sha256",
+      "hash": "6aba5253e67f117aa798094ec9b3caf2f7ab5f35dd6c3e0d3c07e3ac7c11b1ac"
+    },
+    {
+      "file": "model-00012-of-00048.safetensors",
+      "bytes": 7389759032,
+      "algorithm": "sha256",
+      "hash": "b04eebb6cbd8ef0dfb0a87ba62e7a74e4917354a99d8733458e7ff11210c7e81"
+    },
+    {
+      "file": "model-00013-of-00048.safetensors",
+      "bytes": 7389761368,
+      "algorithm": "sha256",
+      "hash": "3a3a75a63f65116820201567224afb4a1ffc8332c4b3a43f69e87354bccbb05d"
+    },
+    {
+      "file": "model-00014-of-00048.safetensors",
+      "bytes": 7389761368,
+      "algorithm": "sha256",
+      "hash": "de7649e1b638507abde463778fd5d0557ef8647ccd4d3ec5830df2abb1194cd2"
+    },
+    {
+      "file": "model-00015-of-00048.safetensors",
+      "bytes": 7389761368,
+      "algorithm": "sha256",
+      "hash": "85eb882fad1c08afa36b3b4079f4a182f3d01dfbbf8f3eee8ae32b7f5b56e124"
+    },
+    {
+      "file": "model-00016-of-00048.safetensors",
+      "bytes": 7389761368,
+      "algorithm": "sha256",
+      "hash": "3e4fc38e3720a156bc6cdc130d50ceab85c5d4782405dc6f31f1fd87615a488e"
+    },
+    {
+      "file": "model-00017-of-00048.safetensors",
+      "bytes": 7405956128,
+      "algorithm": "sha256",
+      "hash": "fd22c6f510ac75d9b0fc0f1ebcfbb42379dd750888ccdaff0262423a2d5b4d17"
+    },
+    {
+      "file": "model-00018-of-00048.safetensors",
+      "bytes": 7389761368,
+      "algorithm": "sha256",
+      "hash": "23c3dd65c50135a88278eceeb54738054d295363c8c1b55e6d0dd4ccfa2b51c1"
+    },
+    {
+      "file": "model-00019-of-00048.safetensors",
+      "bytes": 7389761368,
+      "algorithm": "sha256",
+      "hash": "84440c146fc3455c6e30c9cb8733b1484818c4cab132d0d38b9ca81be6376730"
+    },
+    {
+      "file": "model-00020-of-00048.safetensors",
+      "bytes": 7389761368,
+      "algorithm": "sha256",
+      "hash": "7de0c9f49ead3f3bbf35736832ebea137ed346d0ef594811a75964709ed3217a"
+    },
+    {
+      "file": "model-00021-of-00048.safetensors",
+      "bytes": 7389761368,
+      "algorithm": "sha256",
+      "hash": "84bf01819aa7ab003dc1cb8de11229d62cf1d8f5cc299fc00e09f7772d961f78"
+    },
+    {
+      "file": "model-00022-of-00048.safetensors",
+      "bytes": 7389761368,
+      "algorithm": "sha256",
+      "hash": "5e76ea9110a72885d8900db66d3679834270f5b86d4b16e226bb1ab039d1f95f"
+    },
+    {
+      "file": "model-00023-of-00048.safetensors",
+      "bytes": 7400713088,
+      "algorithm": "sha256",
+      "hash": "36973abbf04a412d869f63dbea6223a93cba2ffa0cfbabea3d7850f8ae9fbb37"
+    },
+    {
+      "file": "model-00024-of-00048.safetensors",
+      "bytes": 7389761368,
+      "algorithm": "sha256",
+      "hash": "59579e2da6375c7b7211f206939c93c1a7f93fc70f4214a6492876603252a421"
+    },
+    {
+      "file": "model-00025-of-00048.safetensors",
+      "bytes": 7389761368,
+      "algorithm": "sha256",
+      "hash": "92fc0fcfd8013cbfe32c8b1b1c7b665132c89cde9d6b11adc20ec6d614bfd3dc"
+    },
+    {
+      "file": "model-00026-of-00048.safetensors",
+      "bytes": 7389761368,
+      "algorithm": "sha256",
+      "hash": "39377f6c8231d929b0b050d2cabf305ca72494169efe24b8dc093d15a2f767e0"
+    },
+    {
+      "file": "model-00027-of-00048.safetensors",
+      "bytes": 7395337384,
+      "algorithm": "sha256",
+      "hash": "1a0a2b49efb7c9bcaea8d0c9055c38b460f14e7fa2859654e4f9718cbb09f5eb"
+    },
+    {
+      "file": "model-00028-of-00048.safetensors",
+      "bytes": 7389761368,
+      "algorithm": "sha256",
+      "hash": "23ab4141aca1d307cbe00b12edc01e3ef4a0681bad6ab6acc6d63fbaeba0773b"
+    },
+    {
+      "file": "model-00029-of-00048.safetensors",
+      "bytes": 7389761368,
+      "algorithm": "sha256",
+      "hash": "df2147e5ed2c8e9201965fb34bc58d76b7e04ff2de761d62c0391c31f0d140f6"
+    },
+    {
+      "file": "model-00030-of-00048.safetensors",
+      "bytes": 7389761368,
+      "algorithm": "sha256",
+      "hash": "d5554819ef3947b3389e8509abfb7774b595a837c6d7da95db53338f21989852"
+    },
+    {
+      "file": "model-00031-of-00048.safetensors",
+      "bytes": 7395337384,
+      "algorithm": "sha256",
+      "hash": "eebb62565f4ea190ecf41bf0d06fbce9cc0b00e43c8abd9ec1c362cd061b864d"
+    },
+    {
+      "file": "model-00032-of-00048.safetensors",
+      "bytes": 7389761368,
+      "algorithm": "sha256",
+      "hash": "e20f3ff5746c69eb98d1ca0f5d8a2feea98e564322fd43343107169ba3251356"
+    },
+    {
+      "file": "model-00033-of-00048.safetensors",
+      "bytes": 7389761368,
+      "algorithm": "sha256",
+      "hash": "2993da83a7f8f041446c4dcd6065bf92230e11f05771b3d783b268aa6ab419a2"
+    },
+    {
+      "file": "model-00034-of-00048.safetensors",
+      "bytes": 7389761368,
+      "algorithm": "sha256",
+      "hash": "681867ea285910c0586d768c88402dea1d4b9ecfc8869788b703936fe29a347e"
+    },
+    {
+      "file": "model-00035-of-00048.safetensors",
+      "bytes": 7395337384,
+      "algorithm": "sha256",
+      "hash": "ce7e640df8a0eee9d8fbd759a5c5bed41241c28583c472042d95f47b0c250609"
+    },
+    {
+      "file": "model-00036-of-00048.safetensors",
+      "bytes": 7389761368,
+      "algorithm": "sha256",
+      "hash": "13bf8f42a53e9c6cb6d4d24d1dbfc87bafdfb8da5f0158920889eff2930019f6"
+    },
+    {
+      "file": "model-00037-of-00048.safetensors",
+      "bytes": 7389761368,
+      "algorithm": "sha256",
+      "hash": "d95626e5a481a75dff43524698c137cd9b580a72528bb4ba4f4b8bb1846254b9"
+    },
+    {
+      "file": "model-00038-of-00048.safetensors",
+      "bytes": 7389761368,
+      "algorithm": "sha256",
+      "hash": "d800da92112af6367a36509c2f8e76e6605eb1132616723438229fcebd4649d8"
+    },
+    {
+      "file": "model-00039-of-00048.safetensors",
+      "bytes": 7395337384,
+      "algorithm": "sha256",
+      "hash": "072e413d96533dcdba0dc8abe9f3b2450397d07aef77a13a4363f51941f815f8"
+    },
+    {
+      "file": "model-00040-of-00048.safetensors",
+      "bytes": 7389761368,
+      "algorithm": "sha256",
+      "hash": "6a9dbcc8d5894ba614b5e962764f45f6d0df7f14f1287b17f173d1f2cd762186"
+    },
+    {
+      "file": "model-00041-of-00048.safetensors",
+      "bytes": 7389761368,
+      "algorithm": "sha256",
+      "hash": "458308f08ed29b34850bd6b9d10bf769620729d3725c77f7bc0c1d14e01b47cc"
+    },
+    {
+      "file": "model-00042-of-00048.safetensors",
+      "bytes": 7389761368,
+      "algorithm": "sha256",
+      "hash": "3d283a4ed6eb2d5013bacc97c3500361926a3261957943434513304df52adfd7"
+    },
+    {
+      "file": "model-00043-of-00048.safetensors",
+      "bytes": 1323837624,
+      "algorithm": "sha256",
+      "hash": "4ae12b941c3facf8616ce62dd45bc6868076c2aeb82106f98123ea6c5bb64182"
+    },
+    {
+      "file": "model-00044-of-00048.safetensors",
+      "bytes": 2652728736,
+      "algorithm": "sha256",
+      "hash": "3e8ac315c2bcca3e83c5e6e25c5758a75c03732063a6ff0c1b0e24b9ff49f6e6"
+    },
+    {
+      "file": "model-00045-of-00048.safetensors",
+      "bytes": 2573998176,
+      "algorithm": "sha256",
+      "hash": "9c73b27c4343236790008979d5e0b565f687aa64440031b9e096fed1ab8039c5"
+    },
+    {
+      "file": "model-00046-of-00048.safetensors",
+      "bytes": 2706402896,
+      "algorithm": "sha256",
+      "hash": "1dccc19a3741972c661de734572dc7d4b899e6e99bfbdf3ae4e057c707e5b339"
+    },
+    {
+      "file": "model-00047-of-00048.safetensors",
+      "bytes": 101535150936,
+      "algorithm": "sha256",
+      "hash": "76a05106ece259be83d1bfea0dcb54f23377864ee60fd321690f35e6698a2af5"
+    },
+    {
+      "file": "model-00048-of-00048.safetensors",
+      "bytes": 101537926640,
+      "algorithm": "sha256",
+      "hash": "9dc51433e195bc78b5ad846b68643cc0351d3b174e5e4309222d3b7402c83afd"
+    },
+    {
+      "file": "model.safetensors.index.json",
+      "bytes": 7470294,
+      "algorithm": "git-blob-sha1",
+      "hash": "54c85064dd92c8550471302e9ae59bedbbf96ca4"
+    },
+    {
+      "file": "tokenizer.json",
+      "bytes": 6367257,
+      "algorithm": "git-blob-sha1",
+      "hash": "6a15814dd25c934028034531da744c689f87ff21"
+    },
+    {
+      "file": "tokenizer_config.json",
+      "bytes": 801,
+      "algorithm": "git-blob-sha1",
+      "hash": "f3dad388a2bbfd6a8605bd02754acd86d9ca5112"
+    }
+  ]
+}

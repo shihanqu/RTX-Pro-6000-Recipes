@@ -1,0 +1,81 @@
+name: warmind-v11-flare-fused-d4-export
+services:
+  export:
+    image: "${PREP_IMAGE:?Run recipe.py build first}"
+    pull_policy: never
+    init: true
+    restart: "no"
+    user: "${HOST_UID:?}:${HOST_GID:?}"
+    working_dir: /src
+    cpus: 8
+    cpu_shares: 128
+    mem_limit: 216g
+    memswap_limit: 216g
+    shm_size: 16g
+    pids_limit: 2048
+    security_opt: ["seccomp=unconfined", "no-new-privileges:true"]
+    ulimits:
+      memlock: {soft: -1, hard: -1}
+    environment:
+      HOME: /work
+      HF_HUB_OFFLINE: "1"
+      HF_HUB_DISABLE_IMPLICIT_TOKEN: "1"
+      HF_HUB_DISABLE_TELEMETRY: "1"
+      CUDA_DEVICE_ORDER: PCI_BUS_ID
+      NVIDIA_VISIBLE_DEVICES: "${GPU_IDS:?}"
+      CUDA_VISIBLE_DEVICES: "${GPU_IDS:?}"
+      PYTHONPATH: /src:/opt/flare-venv/lib/python3.12/site-packages/flashinfer/experimental/b12x/_compat
+    entrypoint: [/opt/flare-venv/bin/python, -u, -B, -m, ignition]
+    command:
+      - export
+      - /inputs/DeepSeek-V4.1-Flash-1017-warmind-orth4c
+      - --config
+      - /work/settings/prepare.toml
+      - --gpus
+      - "0,1,2,3"
+      - --max-concurrency
+      - "32"
+      - --image-concurrency
+      - "4"
+      - --prefill-chunk-size
+      - "4096"
+      - --mtp-draft-tokens
+      - "4"
+      - --speculative-token-capacity
+      - "128"
+      - --speculative-graph-budget
+      - "64"
+      - --expert-scale-compression
+      - native
+      - --mla-compute-mode
+      - bf16
+      - --draft-head-quantization
+      - nvfp4
+      - --markov-head-quantization
+      - fp8
+      - --vocabulary-parallel-sampling
+      - --collective-tuning
+      - runtime
+      - --collective-ladder
+      - /src/ignition/preparation/ladders/gb202_pcie_tp4_clustered_full.json
+      - --compile-workers
+      - "4"
+      - --autotune-effort
+      - default
+    volumes:
+      - type: bind
+        source: "${WORK_DIR:?}"
+        target: /work
+        bind: {create_host_path: false}
+      - type: bind
+        source: "${MODEL_DIR:?}"
+        target: /inputs/DeepSeek-V4.1-Flash-1017-warmind-orth4c
+        read_only: true
+        bind: {create_host_path: false}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["${GPU0:?}", "${GPU1:?}", "${GPU2:?}", "${GPU3:?}"]
+              capabilities: [gpu]

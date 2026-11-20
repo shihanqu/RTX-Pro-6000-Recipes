@@ -1,0 +1,66 @@
+{
+  "repository": "jcartu/WARMIND-1017-FLARE-gb202",
+  "revision": "3c8e7b1a0f3551fb00afdc84a9ae96765f64d80d",
+  "files": [
+    {
+      "file": "weights/tp4/rank-0/layer-004.safetensors",
+      "bytes": 1863453976,
+      "sha256": "ca6942c38eef952dd8ff4aa43c11667cb28061e9424cc66ec1752a4e242907f3"
+    },
+    {
+      "file": "weights/tp4/rank-1/layer-004.safetensors",
+      "bytes": 1863453976,
+      "sha256": "7fe7f46f0019f5bf2cc5afbd7412476869a0dca22082159d9112421f2e0b8e0b"
+    },
+    {
+      "file": "weights/tp4/rank-2/layer-004.safetensors",
+      "bytes": 1863453976,
+      "sha256": "4bc4c2bfb176b59e5252fc7933cb5c4c3456a7eda8574c35a3c1ba4023f8b886"
+    },
+    {
+      "file": "weights/tp4/rank-3/layer-004.safetensors",
+      "bytes": 1863453976,
+      "sha256": "05817bae2946a1d239325bfb47394bd739518e0606066a309296e606f2b1d8e0"
+    },
+    {
+      "file": "weights/tp4/rank-0/layer-020.safetensors",
+      "bytes": 1874728472,
+      "sha256": "d2a07b49c85cea79b2e1688161e8c4ab925a730da71047df9a5c61f7d5b2fdb0"
+    },
+    {
+      "file": "weights/tp4/rank-1/layer-020.safetensors",
+      "bytes": 1874728472,
+      "sha256": "bdbd2ed3f741cd62b7557438fc3375f01661af57e96505cac552bf2033918184"
+    },
+    {
+      "file": "weights/tp4/rank-2/layer-020.safetensors",
+      "bytes": 1874728472,
+      "sha256": "e5e51aa0b1d8f38c81d9fc196171decfdd792b3f1a8d32d9085f3a31a2dcc98c"
+    },
+    {
+      "file": "weights/tp4/rank-3/layer-020.safetensors",
+      "bytes": 1874728472,
+      "sha256": "e1f4044b69f503bca6f89112f582767a0c08be488c7b2aff1e51f2ca7177d1e3"
+    },
+    {
+      "file": "weights/tp4/rank-0/layer-036.safetensors",
+      "bytes": 1869352216,
+      "sha256": "8e90ebd146b804b740430b29cfbe13e61a129c34ce4195142bbdbbacb2702c03"
+    },
+    {
+      "file": "weights/tp4/rank-1/layer-036.safetensors",
+      "bytes": 1869352216,
+      "sha256": "360b88b05a18c9c7167299c57e55c4ad3e48e7bfdc2a310d9352eb7d7fb14362"
+    },
+    {
+      "file": "weights/tp4/rank-2/layer-036.safetensors",
+      "bytes": 1869352216,
+      "sha256": "4f7fbf90c35858a3821ce572a46bc96bb1e0888dfa18563e1c142ae52efe4c35"
+    },
+    {
+      "file": "weights/tp4/rank-3/layer-036.safetensors",
+      "bytes": 1869352216,
+      "sha256": "a1796cd534c3161c1c46c17fa2da6a572d4933210234789486a13eb0a8a9b408"
+    }
+  ]
+}

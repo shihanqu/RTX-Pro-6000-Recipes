@@ -1,0 +1,83 @@
+name: warmind-v11-flare-fused-d4
+services:
+  serve:
+    image: ghcr.io/local-inference-lab/flare@sha256:08742b9e683425a5f2e86c8c4668ea9bac0c9cf041aaa1f3df9a1916de638b52
+    pull_policy: never
+    init: true
+    restart: "no"
+    user: flare
+    working_dir: /home/flare
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 216g
+    memswap_limit: 216g
+    ulimits:
+      memlock: {soft: -1, hard: -1}
+      nofile: {soft: 1048576, hard: 1048576}
+    environment:
+      CUDA_DEVICE_ORDER: PCI_BUS_ID
+      CUDA_VISIBLE_DEVICES: "${GPU_IDS:?}"
+    ports:
+      - target: 1230
+        published: "${HOST_PORT:-1230}"
+        host_ip: "${LOCAL_BIND:?Run recipe.py start}"
+        protocol: tcp
+    tmpfs:
+      - /home/flare:rw,nosuid,nodev,mode=0700,uid=10001,gid=10001,size=128m
+      - /tmp:rw,nosuid,nodev,mode=1777,size=256m
+    command:
+      - run
+      - /model/model.safetensors
+      - --gpus
+      - "0,1,2,3"
+      - --max-concurrency
+      - "32"
+      - --mtp-draft-tokens
+      - "4"
+      - --mtp-adaptive-verification
+      - --mtp-max-verification-token-budget
+      - "128"
+      - --mtp-adaptive-verification-alpha
+      - "0.6"
+      - --scheduler-policy
+      - balanced
+      - --embedding-table-storage
+      - ram
+      - --prefix-cache-memory
+      - "0"
+      - --kv-cache-limit
+      - memory
+      - --host
+      - "${CONTAINER_LISTEN:?Run recipe.py start}"
+      - --port
+      - "1230"
+      - --served-model-name
+      - deepseek-v4.1-flash
+      - --publisher-keys
+      - /publisher.json
+      - --trust-store
+      - /home/flare/trust.toml
+      - --dangerously-accept-publisher
+      - local-development
+      - --dangerously-approve-key
+      - "${PUBLISHER_FINGERPRINT:?Verify your own export with recipe.py}"
+      - --verify-weights
+    volumes:
+      - type: bind
+        source: "${PACKAGE_DIR:?}"
+        target: /model
+        read_only: true
+        bind: {create_host_path: false}
+      - type: bind
+        source: "${PUBLISHER_PROFILE:?}"
+        target: /publisher.json
+        read_only: true
+        bind: {create_host_path: false}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["${GPU0:?}", "${GPU1:?}", "${GPU2:?}", "${GPU3:?}"]
+              capabilities: [gpu]
